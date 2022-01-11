@@ -1,4 +1,6 @@
 import matplotlib
+import glob
+import re
 
 matplotlib.use("TkAgg")
 import os
@@ -23,6 +25,7 @@ POP_SIZE: int = 10
 POPULATION: List[ndarray] = []
 CURRENT_DIRECTORY: str = ""
 CURRENT_USER: str = ""
+CURRENT_SHAPE: int = 0
 
 def make_cube() -> ndarray:
     data = np.zeros(12, dtype=stl.mesh.Mesh.dtype)
@@ -78,18 +81,27 @@ def initialize():
     pyramid = make_pyramid()
     POPULATION = [cube, pyramid]
     CURRENT_USER = input("Input your Username: ")
-    CURRENT_DIRECTORY = path_setup(CURRENT_USER)
+    CURRENT_DIRECTORY = path_setup()
+    update_shape()
 
 
-def path_setup(username: str) -> str:
+def path_setup() -> str:
     cur_path: str = os.getcwd()
-    path: str = cur_path + f"/Users/{username}/"
-    path_to_make: List[str] = [""]
-    for p in path_to_make:
-        if not os.path.exists(os.path.join(path, p)):
-            os.makedirs(os.path.join(path, p))
+    if not os.path.exists(os.path.join(cur_path, "Shapes")):
+        os.makedirs(os.path.join(cur_path, "Shapes"))
+
+    path: str = cur_path + f"/Shapes"
+    # path_to_make: List[str] = [""]
+    # for p in path_to_make:
+    #     if not os.path.exists(os.path.join(path, p)):
+    #         os.makedirs(os.path.join(path, p))
     return path
 
+def update_shape():
+    global CURRENT_SHAPE
+    files = [int(f[-8:-4]) for f in os.listdir(CURRENT_DIRECTORY) if f.startswith(CURRENT_USER+'_')]
+    if files != []:
+        CURRENT_SHAPE = max(files) + 1
 
 win = tk.Tk()
 win.title("3D Generations")
@@ -135,7 +147,7 @@ class GeneticAlgorithmGUI(tk.Frame):
         self.new_pop = self._pop
         tk.Button(self, text="    Save    ", command=self.save_and_exit_button).pack(side=tk.BOTTOM)
         tk.Button(self, text="   Evolve   ", command=self.plot_next_button).pack(side=tk.BOTTOM)
-        tk.Label(self, text=f"Generation: {GeneticAlgorithmGUI.counter}").pack(side=tk.TOP)
+        # tk.Label(self, text=f"Generation: {GeneticAlgorithmGUI.counter}").pack(side=tk.TOP)
         master.bind("<Return>", self.plot_next_key)
         master.bind("<Escape>", self.save_and_exit_key)
         GeneticAlgorithmGUI.entry.bind("<FocusIn>", self.on_entry_click)
@@ -156,9 +168,13 @@ class GeneticAlgorithmGUI(tk.Frame):
         self.fig.canvas.draw()
 
     def plot_next_button(self):
-        self.get_entry()  # update selected model
+        self.get_entry()  # update selection
+        if GeneticAlgorithmGUI.counter == 0:
+            self.save(self._pop[self.input_value - 1], f"{CURRENT_DIRECTORY}/{CURRENT_USER}_start")
+
         self.generate_pop(self.input_value - 1)  # make new pop based on selection
         self.fig.clear()  # clear old figures
+        self.fig.suptitle(f"Generation {GeneticAlgorithmGUI.counter}")
         # do the plotting thing
         for i in range(POP_SIZE):
             msh = mesh.Mesh(self._pop[i])
@@ -172,13 +188,16 @@ class GeneticAlgorithmGUI(tk.Frame):
             self.canvas.mpl_connect("button_release_event", axes._button_release)
             self.canvas.mpl_connect("motion_notify_event", axes._on_move)
         self.fig.canvas.draw()
-        self.save(self._pop[self.input_value - 1], f"{CURRENT_DIRECTORY}/final_{GeneticAlgorithmGUI.counter}")
         GeneticAlgorithmGUI.counter += 1
 
     def plot_next_key(self, event):
-        self.get_entry()  # update selected model
+        self.get_entry()  # update selection
+        if GeneticAlgorithmGUI.counter == 0:
+            self.save(self._pop[self.input_value - 1], f"{CURRENT_DIRECTORY}/{CURRENT_USER}-start_{str(CURRENT_SHAPE).zfill(4)}")
+
         self.generate_pop(self.input_value - 1)  # make new pop based on selection
         self.fig.clear()  # clear old figures
+        self.fig.suptitle(f"Generation {GeneticAlgorithmGUI.counter}")
         # do the plotting thing
         for i in range(POP_SIZE):
             msh = mesh.Mesh(self._pop[i])
@@ -192,22 +211,22 @@ class GeneticAlgorithmGUI(tk.Frame):
             self.canvas.mpl_connect("button_release_event", axes._button_release)
             self.canvas.mpl_connect("motion_notify_event", axes._on_move)
         self.fig.canvas.draw()
-        self.save(self._pop[self.input_value - 1], f"{CURRENT_DIRECTORY}/final_{GeneticAlgorithmGUI.counter}")
         GeneticAlgorithmGUI.counter += 1
 
     def save_and_exit_button(self):
         self.get_final_entry()
         my_mesh = stl.mesh.Mesh(self._pop[self.input_value - 1].copy())
-        my_mesh.save(f"{CURRENT_DIRECTORY}/final_shape.stl", mode=stl.Mode.BINARY)
-        win.destroy()  # no brackets - callback instead of actually destroying window
+        my_mesh.save(f"{CURRENT_DIRECTORY}/{CURRENT_USER}_final_{str(CURRENT_SHAPE).zfill(4)}.stl", mode=stl.Mode.BINARY)
+        win.destroy()  # close window
 
     def save_and_exit_key(self, event):
         self.get_final_entry()
         my_mesh = stl.mesh.Mesh(self._pop[self.input_value - 1].copy())
-        my_mesh.save(f"{CURRENT_DIRECTORY}/final_shape.stl", mode=stl.Mode.BINARY)
-        win.destroy()  # no brackets - callback instead of actually destroying window
+        my_mesh.save(f"{CURRENT_DIRECTORY}/{CURRENT_USER}_final_{str(CURRENT_SHAPE).zfill(4)}.stl", mode=stl.Mode.BINARY)
+        win.destroy()  # close window
 
     def get_entry(self):
+        print(f"Mot Final -> {self.input_value}")
         self.input_value = GeneticAlgorithmGUI.entry.get()
         if self.input_value == "":
             self.input_value = 1
@@ -219,6 +238,7 @@ class GeneticAlgorithmGUI(tk.Frame):
 
     def get_final_entry(self):
         self.input_value = GeneticAlgorithmGUI.entry.get()
+        print(f"Final -> {self.input_value}")
         if type(self.input_value) != int:
             self.input_value = 1
         else:

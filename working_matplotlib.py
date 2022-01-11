@@ -3,7 +3,6 @@ import matplotlib
 matplotlib.use("TkAgg")
 import os
 import random
-import tkinter as tk
 from copy import deepcopy
 from typing import List
 
@@ -11,11 +10,8 @@ import matplotlib.pyplot as plt
 import mpl_toolkits
 import numpy as np
 import stl
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from matplotlib.figure import Figure
 from mpl_toolkits import mplot3d
 from numpy import ndarray
-from stl import mesh
 
 NUM_GEN: int = 10
 C_RATE: float = 0.8

@@ -1,7 +1,5 @@
 import matplotlib
 import glob
-import re
-
 matplotlib.use("TkAgg")
 import os
 import random
@@ -16,6 +14,7 @@ from matplotlib.figure import Figure
 from mpl_toolkits import mplot3d
 from numpy import ndarray
 from stl import mesh
+import pandas as pd
 
 NUM_GEN: int = 10
 C_RATE: float = 0.8
@@ -26,6 +25,7 @@ POPULATION: List[ndarray] = []
 CURRENT_DIRECTORY: str = ""
 CURRENT_USER: str = ""
 CURRENT_SHAPE: int = 0
+CSV_FILE: str = 'phylogenetic.csv'
 
 def make_cube() -> ndarray:
     data = np.zeros(12, dtype=stl.mesh.Mesh.dtype)
@@ -77,6 +77,11 @@ def initialize():
     global POPULATION
     global CURRENT_USER
     global CURRENT_DIRECTORY
+    files = glob.glob("*.csv")
+    if not files:
+        csv = open(os.path.join(os.getcwd(), CSV_FILE), 'w')
+        csv.write("Parent,Child")
+        csv.close()
     cube = make_cube()
     pyramid = make_pyramid()
     POPULATION = [cube, pyramid]
@@ -89,18 +94,13 @@ def path_setup() -> str:
     cur_path: str = os.getcwd()
     if not os.path.exists(os.path.join(cur_path, "Shapes")):
         os.makedirs(os.path.join(cur_path, "Shapes"))
-
     path: str = cur_path + f"/Shapes"
-    # path_to_make: List[str] = [""]
-    # for p in path_to_make:
-    #     if not os.path.exists(os.path.join(path, p)):
-    #         os.makedirs(os.path.join(path, p))
     return path
 
 def update_shape():
     global CURRENT_SHAPE
-    files = [int(f[-8:-4]) for f in os.listdir(CURRENT_DIRECTORY) if f.startswith(CURRENT_USER+'_')]
-    if files != []:
+    files = [int(f[-8:-4]) for f in os.listdir(CURRENT_DIRECTORY) if f.startswith(CURRENT_USER+'_final')]
+    if files:
         CURRENT_SHAPE = max(files) + 1
 
 win = tk.Tk()
@@ -112,7 +112,7 @@ class StartPage:
     def __init__(self, master):
         self.master = master
         self.frame = tk.Frame(self.master)
-        self.HelloButton = tk.Button(self.frame, text = 'Hello', width = 25, command = self.new_window,)
+        self.HelloButton = tk.Button(self.frame, text='Hello', width=25, command=self.new_window,)
         self.HelloButton.pack()
         self.frame.pack()
 
@@ -133,7 +133,7 @@ class GeneticAlgorithmGUI(tk.Frame):
     entry.pack(side="left")
     initialize()
     counter: int = 0
-    proceed = True
+    parent = True
 
     def __init__(self, master=None, **kwargs):
         super().__init__(master, **kwargs)
@@ -147,13 +147,13 @@ class GeneticAlgorithmGUI(tk.Frame):
         self.new_pop = self._pop
         tk.Button(self, text="    Save    ", command=self.save_and_exit_button).pack(side=tk.BOTTOM)
         tk.Button(self, text="   Evolve   ", command=self.plot_next_button).pack(side=tk.BOTTOM)
-        # tk.Label(self, text=f"Generation: {GeneticAlgorithmGUI.counter}").pack(side=tk.TOP)
         master.bind("<Return>", self.plot_next_key)
         master.bind("<Escape>", self.save_and_exit_key)
         GeneticAlgorithmGUI.entry.bind("<FocusIn>", self.on_entry_click)
         GeneticAlgorithmGUI.entry.bind("<FocusOut>", self.on_focusout)
 
     def plot_start(self):
+
         for i in range(2):
             msh = mesh.Mesh(self._pop[i])
             axes = self.fig.add_subplot(2, 1, i + 1, projection="3d")
@@ -170,7 +170,11 @@ class GeneticAlgorithmGUI(tk.Frame):
     def plot_next_button(self):
         self.get_entry()  # update selection
         if GeneticAlgorithmGUI.counter == 0:
-            self.save(self._pop[self.input_value - 1], f"{CURRENT_DIRECTORY}/{CURRENT_USER}_start")
+            if self.input_value - 1 == 0:
+                GeneticAlgorithmGUI.parent = 'cube'
+            elif self.input_value - 1 == 1:
+                GeneticAlgorithmGUI.parent = 'pyramid'
+            self.save(self._pop[self.input_value - 1], f"{CURRENT_DIRECTORY}/{CURRENT_USER}_start_{GeneticAlgorithmGUI.parent}")
 
         self.generate_pop(self.input_value - 1)  # make new pop based on selection
         self.fig.clear()  # clear old figures
@@ -193,7 +197,11 @@ class GeneticAlgorithmGUI(tk.Frame):
     def plot_next_key(self, event):
         self.get_entry()  # update selection
         if GeneticAlgorithmGUI.counter == 0:
-            self.save(self._pop[self.input_value - 1], f"{CURRENT_DIRECTORY}/{CURRENT_USER}-start_{str(CURRENT_SHAPE).zfill(4)}")
+            if self.input_value - 1 == 0:
+                GeneticAlgorithmGUI.parent = 'cube'
+            elif self.input_value - 1 == 1:
+                GeneticAlgorithmGUI.parent = 'pyramid'
+            self.save(self._pop[self.input_value - 1], f"{CURRENT_DIRECTORY}/{CURRENT_USER}_start_{GeneticAlgorithmGUI.parent}")
 
         self.generate_pop(self.input_value - 1)  # make new pop based on selection
         self.fig.clear()  # clear old figures
@@ -217,16 +225,25 @@ class GeneticAlgorithmGUI(tk.Frame):
         self.get_final_entry()
         my_mesh = stl.mesh.Mesh(self._pop[self.input_value - 1].copy())
         my_mesh.save(f"{CURRENT_DIRECTORY}/{CURRENT_USER}_final_{str(CURRENT_SHAPE).zfill(4)}.stl", mode=stl.Mode.BINARY)
+        df: pd.DataFrame = pd.DataFrame(columns=["Parent", "Child"])
+        dictionary = {"Parent": f'{GeneticAlgorithmGUI.parent}', "Child": f'{CURRENT_USER}_final_{str(CURRENT_SHAPE).zfill(4)}'}
+        index = len(df)
+        df.loc[index] = dictionary
+        df.to_csv(CSV_FILE, mode='w', index=False, header=True)
         win.destroy()  # close window
 
     def save_and_exit_key(self, event):
         self.get_final_entry()
         my_mesh = stl.mesh.Mesh(self._pop[self.input_value - 1].copy())
         my_mesh.save(f"{CURRENT_DIRECTORY}/{CURRENT_USER}_final_{str(CURRENT_SHAPE).zfill(4)}.stl", mode=stl.Mode.BINARY)
+        df: pd.DataFrame = pd.DataFrame(columns=["Parent", "Child"])
+        dictionary = {"Parent": f'{GeneticAlgorithmGUI.parent}', "Child": f'{CURRENT_USER}_final_{str(CURRENT_SHAPE).zfill(4)}'}
+        index = len(df)
+        df.loc[index] = dictionary
+        df.to_csv(CSV_FILE, mode='w', index=False, header=True)
         win.destroy()  # close window
 
     def get_entry(self):
-        print(f"Mot Final -> {self.input_value}")
         self.input_value = GeneticAlgorithmGUI.entry.get()
         if self.input_value == "":
             self.input_value = 1
@@ -238,7 +255,6 @@ class GeneticAlgorithmGUI(tk.Frame):
 
     def get_final_entry(self):
         self.input_value = GeneticAlgorithmGUI.entry.get()
-        print(f"Final -> {self.input_value}")
         if type(self.input_value) != int:
             self.input_value = 1
         else:

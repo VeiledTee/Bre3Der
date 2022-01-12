@@ -26,6 +26,7 @@ CURRENT_DIRECTORY: str = ""
 CURRENT_USER: str = ""
 CURRENT_SHAPE: int = 0
 CSV_FILE: str = "phylogenetic.csv"
+TO_LOAD: str = 'malachy_final_0000.stl'
 
 
 def make_cube() -> ndarray:
@@ -70,8 +71,11 @@ def make_pyramid() -> ndarray:
 
     return data
 
+def get_user() -> None:
+    global CURRENT_USER
+    CURRENT_USER = input("Input your Username: ")
 
-def initialize():
+def initialize_scratch():
     # do the population thing
     # fitness will be an overarching thing, keeping track of which of the shapes
     # gets selected per generation so we can develop a tree
@@ -85,10 +89,54 @@ def initialize():
         csv.close()
     cube = make_cube()
     pyramid = make_pyramid()
-    POPULATION = [cube, pyramid]
-    CURRENT_USER = input("Input your Username: ")
+    new_pop = [cube, pyramid]
     CURRENT_DIRECTORY = path_setup()
     update_shape()
+    return new_pop
+
+def initialize_from():
+    # do the population thing
+    # fitness will be an overarching thing, keeping track of which of the shapes
+    # gets selected per generation so we can develop a tree
+    global POPULATION
+    global CURRENT_USER
+    global CURRENT_DIRECTORY
+    files = glob.glob("*.csv")
+    if not files:
+        csv = open(os.path.join(os.getcwd(), CSV_FILE), "w")
+        csv.write("Parent,Child")
+        csv.close()
+    CURRENT_DIRECTORY = path_setup()
+    pop_files = glob.glob(f"{CURRENT_DIRECTORY}/*.stl")
+    cleaned_files = []
+    for i in pop_files:
+        cleaned_files.append(os.path.basename(i))
+    new_pop = []
+    for i in range(POP_SIZE):
+        new_mesh = mesh.Mesh.from_file(CURRENT_DIRECTORY + "/" + str(cleaned_files[random.randint(0, len(cleaned_files) - 1)]))
+        new_pop.append(new_mesh)
+    update_shape()
+    return new_pop
+
+def initialize_file():
+    # do the population thing
+    # fitness will be an overarching thing, keeping track of which of the shapes
+    # gets selected per generation so we can develop a tree
+    global POPULATION
+    global CURRENT_DIRECTORY
+    files = glob.glob("*.csv")
+    if not files:
+        csv = open(os.path.join(os.getcwd(), CSV_FILE), "w")
+        csv.write("Parent,Child")
+        csv.close()
+    CURRENT_DIRECTORY = path_setup()
+    update_shape()
+    new_pop = []
+    print(TO_LOAD)
+    for i in range(POP_SIZE):
+        new_mesh = mesh.Mesh.from_file(CURRENT_DIRECTORY + "/" + TO_LOAD)
+        new_pop.append(new_mesh)
+    return new_pop
 
 
 def path_setup() -> str:
@@ -106,72 +154,113 @@ def update_shape():
         CURRENT_SHAPE = max(files) + 1
 
 
-win = tk.Tk()
-win.title("3D Generations")
-win.rowconfigure(2)
-win.columnconfigure(5)
-win.withdraw()
+win1 = tk.Tk()
+win1.title("3D Generations")
+win1.rowconfigure(2)
+win1.columnconfigure(5)
+win1.withdraw()
 
-top_level = tk.Toplevel(win)
+win2 = tk.Tk()
+win2.title("3D Generations")
+win2.rowconfigure(2)
+win2.columnconfigure(5)
+win2.withdraw()
+
+win3 = tk.Tk()
+win3.title("3D Generations")
+win3.rowconfigure(2)
+win3.columnconfigure(5)
+win3.withdraw()
+
+win4 = tk.Tk()
 
 
 def scratch_window():
-    top_level.destroy()
-    win.iconify()
-    f = GeneticAlgorithmScratch(win)
+    win2.destroy()
+    win3.destroy()
+    win4.destroy()
+
+    win1.iconify()
+    f = GeneticAlgorithmScratch(win1)
     f.pack()
-    win.deiconify()
-    
+    win1.deiconify()
+
 def from_window():
-    top_level.destroy()
-    win.iconify()
-    f = GeneticAlgorithmFrom(win)
+    win1.destroy()
+    win3.destroy()
+    win4.destroy()
+
+    win2.iconify()
+    f = GeneticAlgorithmFrom(win2)
     f.pack()
-    win.deiconify()
-    
+    win2.deiconify()
+
+
 def file_window():
-    top_level.destroy()
-    win.iconify()
-    f = GeneticAlgorithmFile(win)
+    win1.destroy()
+    win2.destroy()
+    win4.destroy()
+
+    win3.iconify()
+    f = GeneticAlgorithmFile(win3)
     f.pack()
-    win.deiconify()
+    win3.deiconify()
 
-
-class StartPage(tk.Frame):
+class StartPage(tk.Tk):
     def __init__(self, master):
+        global TO_LOAD
+        tk.Tk.__init__(self)
+        self.entry = tk.Entry(self)
+        self.entry.pack()
         self.master = master
-        self.frame = tk.Frame(self.master)
+        self.frame = win4
         self.BeginNewButton = tk.Button(
-            self.frame,
+            win4,
             text="From Scratch",
             width=25,
             command=scratch_window,
         )
         self.BeginNewButton.pack()
         self.BeginFromButton = tk.Button(
-            self.frame,
+            win4,
             text="From Random",
             width=25,
             command=from_window,
         )
         self.BeginFromButton.pack()
         self.BeginFileButton = tk.Button(
-            self.frame,
+            win4,
             text="From File",
             width=25,
             command=file_window,
         )
         self.BeginFileButton.pack()
-        self.frame.pack()
+        TO_LOAD = self.entry.get()
 
+    def on_entry_click(self, event):
+        """
+        function that gets called whenever entry is clicked
+        referenced: https://stackoverflow.com/questions/30491721/how-to-insert-a-temporary-text-in-a-tkinter-entry-widget
+        """
+        if StartPage.entry.cget("fg") == "grey":
+            StartPage.entry.delete(0, "end")  # delete all the text in the entry
+            StartPage.entry.insert(0, "")  # Insert blank for user input
+            StartPage.entry.config(fg="black")
 
+    def on_focusout(self, event):
+        """
+        referenced: https://stackoverflow.com/questions/30491721/how-to-insert-a-temporary-text-in-a-tkinter-entry-widget
+        """
+        if StartPage.entry.get() == "":
+            StartPage.entry.insert(0, "Shape number you like the most...")
+            StartPage.entry.config(fg="grey")
 
 class GeneticAlgorithmScratch(tk.Frame):
-    entry = tk.Entry(win, width=35, bd=1)
+    entry = tk.Entry(win1, width=35, bd=1)
     entry.insert(0, "Shape number you like the most...")
     entry.config(fg="grey")
     entry.pack(side="left")
-    initialize()
+    scratch_pop = initialize_scratch()
     counter: int = 0
     parent = True
 
@@ -181,7 +270,7 @@ class GeneticAlgorithmScratch(tk.Frame):
         self.fig = figure
         self.canvas = FigureCanvasTkAgg(figure, master=self)
         self.canvas.get_tk_widget().pack()
-        self._pop = POPULATION
+        self._pop = GeneticAlgorithmScratch.scratch_pop
         self.plot_start()
         self.input_value = 1
         self.new_pop = self._pop
@@ -193,7 +282,6 @@ class GeneticAlgorithmScratch(tk.Frame):
         GeneticAlgorithmScratch.entry.bind("<FocusOut>", self.on_focusout)
 
     def plot_start(self):
-
         for i in range(2):
             msh = mesh.Mesh(self._pop[i])
             axes = self.fig.add_subplot(2, 1, i + 1, projection="3d")
@@ -278,7 +366,9 @@ class GeneticAlgorithmScratch(tk.Frame):
         with open(CSV_FILE, "a") as to_write:
             to_write.write(f"{GeneticAlgorithmScratch.parent},{CURRENT_USER}_final_{str(CURRENT_SHAPE).zfill(4)}")
         to_write.close()
-        win.destroy()  # close window
+        win1.destroy()
+        win2.destroy()
+        win3.destroy()  # close windows
 
     def save_and_exit_key(self, event):
         self.get_final_entry()
@@ -289,7 +379,9 @@ class GeneticAlgorithmScratch(tk.Frame):
         with open(CSV_FILE, "a") as to_write:
             to_write.write(f"{GeneticAlgorithmScratch.parent},{CURRENT_USER}_final_{str(CURRENT_SHAPE).zfill(4)}")
         to_write.close()
-        win.destroy()  # close window
+        win1.destroy()
+        win2.destroy()
+        win3.destroy()  # close windows
 
     def get_entry(self):
         self.input_value = GeneticAlgorithmScratch.entry.get()
@@ -412,13 +504,12 @@ class GeneticAlgorithmScratch(tk.Frame):
         new_data["vectors"][v + 2] = np.array([to_break[1], midpoints[0], midpoints[1]])
         new_data["vectors"][v + 3] = np.array([to_break[2], midpoints[1], midpoints[2]])
         return new_data
-    
+
 class GeneticAlgorithmFrom(tk.Frame):
-    entry = tk.Entry(win, width=35, bd=1)
+    entry = tk.Entry(win2, width=35, bd=1)
     entry.insert(0, "Shape number you like the most...")
     entry.config(fg="grey")
     entry.pack(side="left")
-    initialize()
     counter: int = 0
     parent = True
 
@@ -428,7 +519,7 @@ class GeneticAlgorithmFrom(tk.Frame):
         self.fig = figure
         self.canvas = FigureCanvasTkAgg(figure, master=self)
         self.canvas.get_tk_widget().pack()
-        self._pop = POPULATION
+        self._pop = initialize_from()
         self.plot_start()
         self.input_value = 1
         self.new_pop = self._pop
@@ -440,10 +531,9 @@ class GeneticAlgorithmFrom(tk.Frame):
         GeneticAlgorithmFrom.entry.bind("<FocusOut>", self.on_focusout)
 
     def plot_start(self):
-
-        for i in range(2):
+        for i in range(len(self._pop)):
             msh = mesh.Mesh(self._pop[i])
-            axes = self.fig.add_subplot(2, 1, i + 1, projection="3d")
+            axes = self.fig.add_subplot(2, 5, i + 1, projection="3d")
             axes.set_xlim([-2, 2])
             axes.set_ylim([-2, 2])
             axes.set_zlim([-2, 2])
@@ -525,7 +615,9 @@ class GeneticAlgorithmFrom(tk.Frame):
         with open(CSV_FILE, "a") as to_write:
             to_write.write(f"{GeneticAlgorithmFrom.parent},{CURRENT_USER}_final_{str(CURRENT_SHAPE).zfill(4)}")
         to_write.close()
-        win.destroy()  # close window
+        win1.destroy()
+        win2.destroy()
+        win3.destroy()  # close windows
 
     def save_and_exit_key(self, event):
         self.get_final_entry()
@@ -536,7 +628,9 @@ class GeneticAlgorithmFrom(tk.Frame):
         with open(CSV_FILE, "a") as to_write:
             to_write.write(f"{GeneticAlgorithmFrom.parent},{CURRENT_USER}_final_{str(CURRENT_SHAPE).zfill(4)}")
         to_write.close()
-        win.destroy()  # close window
+        win1.destroy()
+        win2.destroy()
+        win3.destroy()  # close windows
 
     def get_entry(self):
         self.input_value = GeneticAlgorithmFrom.entry.get()
@@ -659,15 +753,14 @@ class GeneticAlgorithmFrom(tk.Frame):
         new_data["vectors"][v + 2] = np.array([to_break[1], midpoints[0], midpoints[1]])
         new_data["vectors"][v + 3] = np.array([to_break[2], midpoints[1], midpoints[2]])
         return new_data
-    
+
 class GeneticAlgorithmFile(tk.Frame):
-    entry = tk.Entry(win, width=35, bd=1)
+    entry = tk.Entry(win3, width=35, bd=1)
     entry.insert(0, "Shape number you like the most...")
     entry.config(fg="grey")
     entry.pack(side="left")
-    initialize()
     counter: int = 0
-    parent = True
+    parent = TO_LOAD[:-4]
 
     def __init__(self, master=None, **kwargs):
         super().__init__(master, **kwargs)
@@ -675,9 +768,9 @@ class GeneticAlgorithmFile(tk.Frame):
         self.fig = figure
         self.canvas = FigureCanvasTkAgg(figure, master=self)
         self.canvas.get_tk_widget().pack()
-        self._pop = POPULATION
-        self.plot_start()
+        self._pop = initialize_file()
         self.input_value = 1
+        self.plot_start()
         self.new_pop = self._pop
         tk.Button(self, text="    Save    ", command=self.save_and_exit_button).pack(side=tk.BOTTOM)
         tk.Button(self, text="   Evolve   ", command=self.plot_next_button).pack(side=tk.BOTTOM)
@@ -687,10 +780,12 @@ class GeneticAlgorithmFile(tk.Frame):
         GeneticAlgorithmFile.entry.bind("<FocusOut>", self.on_focusout)
 
     def plot_start(self):
-
-        for i in range(2):
-            msh = mesh.Mesh(self._pop[i])
-            axes = self.fig.add_subplot(2, 1, i + 1, projection="3d")
+        self.generate_pop(0)
+        self.fig.clear()  # clear old figures
+        self.fig.suptitle(f"Generation {GeneticAlgorithmFile.counter}")
+        for i in range(POP_SIZE):
+            msh = self._pop[i]
+            axes = self.fig.add_subplot(2, 5, i + 1, projection="3d")
             axes.set_xlim([-2, 2])
             axes.set_ylim([-2, 2])
             axes.set_zlim([-2, 2])
@@ -772,7 +867,9 @@ class GeneticAlgorithmFile(tk.Frame):
         with open(CSV_FILE, "a") as to_write:
             to_write.write(f"{GeneticAlgorithmFile.parent},{CURRENT_USER}_final_{str(CURRENT_SHAPE).zfill(4)}")
         to_write.close()
-        win.destroy()  # close window
+        win1.destroy()
+        win2.destroy()
+        win3.destroy()  # close windows
 
     def save_and_exit_key(self, event):
         self.get_final_entry()
@@ -783,7 +880,9 @@ class GeneticAlgorithmFile(tk.Frame):
         with open(CSV_FILE, "a") as to_write:
             to_write.write(f"{GeneticAlgorithmFile.parent},{CURRENT_USER}_final_{str(CURRENT_SHAPE).zfill(4)}")
         to_write.close()
-        win.destroy()  # close window
+        win1.destroy()
+        win2.destroy()
+        win3.destroy()  # close windows
 
     def get_entry(self):
         self.input_value = GeneticAlgorithmFile.entry.get()
@@ -822,8 +921,12 @@ class GeneticAlgorithmFile(tk.Frame):
                     to_break=self.new_pop[i]["vectors"][t], index=t, parent=self.new_pop[i]
                 )  # make more triangles
             if np.random.randint(0, 2) % 2 == 0:
+                print(i)
+                print(type(self.new_pop[i]))
                 self.point_manipulation(self.new_pop[i], self.multiply_points)  # multiply a point by random value
             else:
+                print(i)
+                print(type(self.new_pop[i]))
                 self.point_manipulation(self.new_pop[i], self.add_points)  # add a random value to a point
         self._pop = self.new_pop
 
@@ -909,5 +1012,8 @@ class GeneticAlgorithmFile(tk.Frame):
 
 
 if __name__ == "__main__":
-    s = StartPage(top_level)
-    win.mainloop()
+    get_user()
+    s = StartPage(win4)
+    # s.pack()
+    win4.mainloop()
+    # win1.mainloop()

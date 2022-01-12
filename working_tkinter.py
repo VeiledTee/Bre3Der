@@ -1,5 +1,6 @@
 import matplotlib
 import glob
+
 matplotlib.use("TkAgg")
 import os
 import random
@@ -25,7 +26,8 @@ POPULATION: List[ndarray] = []
 CURRENT_DIRECTORY: str = ""
 CURRENT_USER: str = ""
 CURRENT_SHAPE: int = 0
-CSV_FILE: str = 'phylogenetic.csv'
+CSV_FILE: str = "phylogenetic.csv"
+
 
 def make_cube() -> ndarray:
     data = np.zeros(12, dtype=stl.mesh.Mesh.dtype)
@@ -79,7 +81,7 @@ def initialize():
     global CURRENT_DIRECTORY
     files = glob.glob("*.csv")
     if not files:
-        csv = open(os.path.join(os.getcwd(), CSV_FILE), 'w')
+        csv = open(os.path.join(os.getcwd(), CSV_FILE), "w")
         csv.write("Parent,Child")
         csv.close()
     cube = make_cube()
@@ -97,22 +99,30 @@ def path_setup() -> str:
     path: str = cur_path + f"/Shapes"
     return path
 
+
 def update_shape():
     global CURRENT_SHAPE
-    files = [int(f[-8:-4]) for f in os.listdir(CURRENT_DIRECTORY) if f.startswith(CURRENT_USER+'_final')]
+    files = [int(f[-8:-4]) for f in os.listdir(CURRENT_DIRECTORY) if f.startswith(CURRENT_USER + "_final")]
     if files:
         CURRENT_SHAPE = max(files) + 1
+
 
 win = tk.Tk()
 win.title("3D Generations")
 win.rowconfigure(2)
 win.columnconfigure(5)
 
+
 class StartPage:
     def __init__(self, master):
         self.master = master
         self.frame = tk.Frame(self.master)
-        self.HelloButton = tk.Button(self.frame, text='Hello', width=25, command=self.new_window,)
+        self.HelloButton = tk.Button(
+            self.frame,
+            text="Hello",
+            width=25,
+            command=self.new_window,
+        )
         self.HelloButton.pack()
         self.frame.pack()
 
@@ -125,6 +135,7 @@ class StartPage:
         self.master = tk.Tk()  # create another Tk instance
         self.app = GeneticAlgorithmGUI(self.master)  # create Demo2 window
         self.master.mainloop()
+
 
 class GeneticAlgorithmGUI(tk.Frame):
     entry = tk.Entry(win, width=35, bd=1)
@@ -170,11 +181,15 @@ class GeneticAlgorithmGUI(tk.Frame):
     def plot_next_button(self):
         self.get_entry()  # update selection
         if GeneticAlgorithmGUI.counter == 0:
+            # keep track of parents
             if self.input_value - 1 == 0:
-                GeneticAlgorithmGUI.parent = 'cube'
+                GeneticAlgorithmGUI.parent = "cube"
             elif self.input_value - 1 == 1:
-                GeneticAlgorithmGUI.parent = 'pyramid'
-            self.save(self._pop[self.input_value - 1], f"{CURRENT_DIRECTORY}/{CURRENT_USER}_start_{GeneticAlgorithmGUI.parent}")
+                GeneticAlgorithmGUI.parent = "pyramid"
+            self.save(
+                self._pop[self.input_value - 1],
+                f"{CURRENT_DIRECTORY}/{CURRENT_USER}_start_{GeneticAlgorithmGUI.parent}",
+            )
 
         self.generate_pop(self.input_value - 1)  # make new pop based on selection
         self.fig.clear()  # clear old figures
@@ -197,11 +212,15 @@ class GeneticAlgorithmGUI(tk.Frame):
     def plot_next_key(self, event):
         self.get_entry()  # update selection
         if GeneticAlgorithmGUI.counter == 0:
+            # keep track of parents
             if self.input_value - 1 == 0:
-                GeneticAlgorithmGUI.parent = 'cube'
+                GeneticAlgorithmGUI.parent = "cube"
             elif self.input_value - 1 == 1:
-                GeneticAlgorithmGUI.parent = 'pyramid'
-            self.save(self._pop[self.input_value - 1], f"{CURRENT_DIRECTORY}/{CURRENT_USER}_start_{GeneticAlgorithmGUI.parent}")
+                GeneticAlgorithmGUI.parent = "pyramid"
+            self.save(
+                self._pop[self.input_value - 1],
+                f"{CURRENT_DIRECTORY}/{CURRENT_USER}_start_{GeneticAlgorithmGUI.parent}",
+            )
 
         self.generate_pop(self.input_value - 1)  # make new pop based on selection
         self.fig.clear()  # clear old figures
@@ -224,23 +243,23 @@ class GeneticAlgorithmGUI(tk.Frame):
     def save_and_exit_button(self):
         self.get_final_entry()
         my_mesh = stl.mesh.Mesh(self._pop[self.input_value - 1].copy())
-        my_mesh.save(f"{CURRENT_DIRECTORY}/{CURRENT_USER}_final_{str(CURRENT_SHAPE).zfill(4)}.stl", mode=stl.Mode.BINARY)
-        df: pd.DataFrame = pd.DataFrame(columns=["Parent", "Child"])
-        dictionary = {"Parent": f'{GeneticAlgorithmGUI.parent}', "Child": f'{CURRENT_USER}_final_{str(CURRENT_SHAPE).zfill(4)}'}
-        index = len(df)
-        df.loc[index] = dictionary
-        df.to_csv(CSV_FILE, mode='w', index=False, header=True)
+        my_mesh.save(
+            f"{CURRENT_DIRECTORY}/{CURRENT_USER}_final_{str(CURRENT_SHAPE).zfill(4)}.stl", mode=stl.Mode.BINARY
+        )
+        with open(CSV_FILE, "a") as to_write:
+            to_write.write(f"{GeneticAlgorithmGUI.parent},{CURRENT_USER}_final_{str(CURRENT_SHAPE).zfill(4)}")
+        to_write.close()
         win.destroy()  # close window
 
     def save_and_exit_key(self, event):
         self.get_final_entry()
         my_mesh = stl.mesh.Mesh(self._pop[self.input_value - 1].copy())
-        my_mesh.save(f"{CURRENT_DIRECTORY}/{CURRENT_USER}_final_{str(CURRENT_SHAPE).zfill(4)}.stl", mode=stl.Mode.BINARY)
-        df: pd.DataFrame = pd.DataFrame(columns=["Parent", "Child"])
-        dictionary = {"Parent": f'{GeneticAlgorithmGUI.parent}', "Child": f'{CURRENT_USER}_final_{str(CURRENT_SHAPE).zfill(4)}'}
-        index = len(df)
-        df.loc[index] = dictionary
-        df.to_csv(CSV_FILE, mode='w', index=False, header=True)
+        my_mesh.save(
+            f"{CURRENT_DIRECTORY}/{CURRENT_USER}_final_{str(CURRENT_SHAPE).zfill(4)}.stl", mode=stl.Mode.BINARY
+        )
+        with open(CSV_FILE, "a") as to_write:
+            to_write.write(f"{GeneticAlgorithmGUI.parent},{CURRENT_USER}_final_{str(CURRENT_SHAPE).zfill(4)}")
+        to_write.close()
         win.destroy()  # close window
 
     def get_entry(self):
@@ -272,7 +291,9 @@ class GeneticAlgorithmGUI(tk.Frame):
         parent: ndarray = self._pop[selected]
         self.new_pop: List[ndarray] = [deepcopy(parent) for _ in range(POP_SIZE)]
         for i in range(POP_SIZE):  # for the pop size
-            if np.random.uniform(0, 1) < T_RATE and GeneticAlgorithmGUI.counter > 0:  # if not first evolution and we make new triangle
+            if (
+                np.random.uniform(0, 1) < T_RATE and GeneticAlgorithmGUI.counter > 0
+            ):  # if not first evolution and we make new triangle
                 t = np.random.randint(0, len(self.new_pop[i]["vectors"]))  # choose random triangle
                 self.new_pop[i] = self.break_up_triangle(
                     to_break=self.new_pop[i]["vectors"][t], index=t, parent=self.new_pop[i]

@@ -15,7 +15,6 @@ from matplotlib.figure import Figure
 from mpl_toolkits import mplot3d
 from numpy import ndarray
 from stl import mesh
-import pandas as pd
 
 NUM_GEN: int = 10
 C_RATE: float = 0.8
@@ -188,7 +187,7 @@ class GeneticAlgorithmGUI(tk.Frame):
                 GeneticAlgorithmGUI.parent = "pyramid"
             self.save(
                 self._pop[self.input_value - 1],
-                f"{CURRENT_DIRECTORY}/{CURRENT_USER}_start_{GeneticAlgorithmGUI.parent}",
+                f"{CURRENT_DIRECTORY}/{GeneticAlgorithmGUI.parent}",
             )
 
         self.generate_pop(self.input_value - 1)  # make new pop based on selection
@@ -219,7 +218,7 @@ class GeneticAlgorithmGUI(tk.Frame):
                 GeneticAlgorithmGUI.parent = "pyramid"
             self.save(
                 self._pop[self.input_value - 1],
-                f"{CURRENT_DIRECTORY}/{CURRENT_USER}_start_{GeneticAlgorithmGUI.parent}",
+                f"{CURRENT_DIRECTORY}/{GeneticAlgorithmGUI.parent}",
             )
 
         self.generate_pop(self.input_value - 1)  # make new pop based on selection

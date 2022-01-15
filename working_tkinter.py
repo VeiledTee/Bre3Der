@@ -2,6 +2,8 @@ import matplotlib
 import glob
 
 import os
+import pandas as pd
+
 import random
 import tkinter as tk
 from copy import deepcopy
@@ -27,7 +29,28 @@ CURRENT_DIRECTORY: str = ""
 CURRENT_USER: str = ""
 CURRENT_SHAPE: int = 0
 CSV_FILE: str = "phylogenetic.csv"
-TO_LOAD: str = 'malachy_final_0000.stl'
+TO_LOAD: str = ''
+
+win1 = tk.Tk()
+win1.title("3D Generations")
+win1.rowconfigure(2)
+win1.columnconfigure(5)
+win1.withdraw()
+
+win2 = tk.Tk()
+win2.title("3D Generations")
+win2.rowconfigure(2)
+win2.columnconfigure(5)
+win2.withdraw()
+
+win3 = tk.Tk()
+win3.title("3D Generations")
+win3.rowconfigure(2)
+win3.columnconfigure(5)
+win3.withdraw()
+
+win4 = tk.Tk()
+win4.title("Start")
 
 def make_cube() -> ndarray:
     data = np.zeros(12, dtype=stl.mesh.Mesh.dtype)
@@ -53,7 +76,6 @@ def make_cube() -> ndarray:
     data["vectors"][11] = np.array([[0, 1, 1], [0, 1, 0], [1, 1, 0]])
 
     return data
-
 
 def make_pyramid() -> ndarray:
     data = np.zeros(12, dtype=stl.mesh.Mesh.dtype)
@@ -91,7 +113,6 @@ def initialize_scratch():
     pyramid = make_pyramid()
     new_pop = [cube, pyramid]
     CURRENT_DIRECTORY = path_setup()
-    update_shape()
     return new_pop
 
 def initialize_from():
@@ -118,7 +139,6 @@ def initialize_from():
         new_mesh = mesh.Mesh.from_file(CURRENT_DIRECTORY + "/" + p).data
         parents.append(p)
         new_pop.append(new_mesh)
-    update_shape()
     return new_pop, parents
 
 def initialize_file():
@@ -136,10 +156,8 @@ def initialize_file():
         csv.write("Parent,Child")
         csv.close()
     CURRENT_DIRECTORY = path_setup()
-    update_shape()
     new_pop = [mesh.Mesh.from_file(CURRENT_DIRECTORY + "/" + TO_LOAD).data for _ in range(POP_SIZE)]
     return new_pop
-
 
 def path_setup() -> str:
     cur_path: str = os.getcwd()
@@ -148,35 +166,11 @@ def path_setup() -> str:
     path: str = cur_path + f"/Shapes"
     return path
 
-
 def update_shape():
     global CURRENT_SHAPE
     files = [int(f[-8:-4]) for f in os.listdir(CURRENT_DIRECTORY) if f.startswith(f"{CURRENT_USER}_")]
     if files:
         CURRENT_SHAPE = max(files) + 1
-
-
-win1 = tk.Tk()
-win1.title("3D Generations")
-win1.rowconfigure(2)
-win1.columnconfigure(5)
-win1.withdraw()
-
-win2 = tk.Tk()
-win2.title("3D Generations")
-win2.rowconfigure(2)
-win2.columnconfigure(5)
-win2.withdraw()
-
-win3 = tk.Tk()
-win3.title("3D Generations")
-win3.rowconfigure(2)
-win3.columnconfigure(5)
-win3.withdraw()
-
-win4 = tk.Tk()
-win4.title("Start")
-
 
 def scratch_window():
     win2.destroy()
@@ -197,7 +191,6 @@ def from_window():
     f = GeneticAlgorithmFrom(win2)
     f.pack()
     win2.deiconify()
-
 
 def file_window():
     global TO_LOAD
@@ -271,7 +264,9 @@ class GeneticAlgorithmScratch(tk.Frame):
     parent = 'parent'
 
     def __init__(self, master=None, **kwargs):
+        update_shape()
         super().__init__(master, **kwargs)
+        self.master = master
         figure = Figure(figsize=(12, 8))
         self.fig = figure
         self.canvas = FigureCanvasTkAgg(figure, master=self)
@@ -364,32 +359,47 @@ class GeneticAlgorithmScratch(tk.Frame):
         GeneticAlgorithmScratch.counter += 1
 
     def save(self, to_plot, save_file: str):
-        print(type(to_plot))
         self.get_entry()
         my_mesh = stl.mesh.Mesh(to_plot.copy())
         my_mesh.save(f"{save_file}.stl", mode=stl.Mode.BINARY)
 
     def save_and_exit_button(self):
         self.get_final_entry()
+        print(self.input_value)
         my_mesh = stl.mesh.Mesh(self._pop[self.input_value - 1].copy())
         my_mesh.save(
             f"{CURRENT_DIRECTORY}/{CURRENT_USER}_{str(CURRENT_SHAPE).zfill(4)}.stl", mode=stl.Mode.BINARY
         )
-        with open(CSV_FILE, "a") as to_write:
-            to_write.write(f"{GeneticAlgorithmScratch.parent},{CURRENT_USER}_{str(CURRENT_SHAPE).zfill(4)}")
-        to_write.close()
-        win1.destroy()  # close window
+        df = pd.read_csv(CSV_FILE)
+        index = len(df.index)
+        diction = {df.columns[0]: GeneticAlgorithmScratch.parent, df.columns[1]: f'{CURRENT_USER}_{str(CURRENT_SHAPE).zfill(4)}'}
+        df.loc[index] = diction
+        df.to_csv(CSV_FILE, index=False)
+
+        new_win = tk.Toplevel(self.master)
+        to_kill = self.master
+        new_win.title("Saved Successfully")
+        tk.Label(new_win, text=f"Saved to file: {CURRENT_USER}_{str(CURRENT_SHAPE).zfill(4)}.stl", font='Helvetica 24 bold').pack(side=tk.TOP)
+        tk.Button(new_win, text='Exit', command=to_kill.destroy).pack(side=tk.BOTTOM)
 
     def save_and_exit_key(self, event):
         self.get_final_entry()
+        print(self.input_value)
         my_mesh = stl.mesh.Mesh(self._pop[self.input_value - 1].copy())
         my_mesh.save(
             f"{CURRENT_DIRECTORY}/{CURRENT_USER}_{str(CURRENT_SHAPE).zfill(4)}.stl", mode=stl.Mode.BINARY
         )
-        with open(CSV_FILE, "a") as to_write:
-            to_write.write(f"{GeneticAlgorithmScratch.parent},{CURRENT_USER}_{str(CURRENT_SHAPE).zfill(4)}")
-        to_write.close()
-        win1.destroy()  # close window
+        df = pd.read_csv(CSV_FILE)
+        index = len(df.index)
+        diction = {df.columns[0]: GeneticAlgorithmScratch.parent, df.columns[1]: f'{CURRENT_USER}_{str(CURRENT_SHAPE).zfill(4)}'}
+        df.loc[index] = diction
+        df.to_csv(CSV_FILE, index=False)
+
+        new_win = tk.Toplevel(self.master)
+        to_kill = self.master
+        new_win.title("Saved Successfully")
+        tk.Label(new_win, text=f"Saved to file: {CURRENT_USER}_{str(CURRENT_SHAPE).zfill(4)}.stl", font='Helvetica 24 bold').pack(side=tk.TOP)
+        tk.Button(new_win, text='Exit', command=to_kill.destroy).pack(side=tk.BOTTOM)
 
     def get_entry(self):
         self.input_value = GeneticAlgorithmScratch.entry.get()
@@ -403,7 +413,7 @@ class GeneticAlgorithmScratch(tk.Frame):
 
     def get_final_entry(self):
         self.input_value = GeneticAlgorithmScratch.entry.get()
-        if type(self.input_value) != int:
+        if self.input_value == "":
             self.input_value = 1
         else:
             try:
@@ -416,7 +426,7 @@ class GeneticAlgorithmScratch(tk.Frame):
         self.new_pop: List[ndarray] = [deepcopy(parent) for _ in range(POP_SIZE)]
         for i in range(POP_SIZE):  # for the pop size
             if (
-                np.random.uniform(0, 1) < T_RATE and GeneticAlgorithmFile.counter > 0
+                np.random.uniform(0, 1) < T_RATE and GeneticAlgorithmScratch.counter > 0
             ):  # if not first evolution and we make new triangle
                 t = np.random.randint(0, len(self.new_pop[i]["vectors"]))  # choose random triangle
                 self.new_pop[i] = self.break_up_triangle(
@@ -517,6 +527,8 @@ class GeneticAlgorithmFrom(tk.Frame):
     parent = 'parent'
 
     def __init__(self, master=None, **kwargs):
+        update_shape()
+        self.master = master
         super().__init__(master, **kwargs)
         figure = Figure(figsize=(12, 8))
         self.fig = figure
@@ -604,10 +616,9 @@ class GeneticAlgorithmFrom(tk.Frame):
         GeneticAlgorithmFrom.counter += 1
 
     def save(self, to_plot, save_file: str):
-        print(type(to_plot))
         self.get_entry()
         my_mesh = stl.mesh.Mesh(to_plot.copy())
-        my_mesh.save(f"{save_file}.stl", mode=stl.Mode.BINARY)
+        my_mesh.save(f"{save_file}", mode=stl.Mode.BINARY)
 
     def save_and_exit_button(self):
         self.get_final_entry()
@@ -615,10 +626,17 @@ class GeneticAlgorithmFrom(tk.Frame):
         my_mesh.save(
             f"{CURRENT_DIRECTORY}/{CURRENT_USER}_{str(CURRENT_SHAPE).zfill(4)}.stl", mode=stl.Mode.BINARY
         )
-        with open(CSV_FILE, "a") as to_write:
-            to_write.write(f"{GeneticAlgorithmFrom.parent},{CURRENT_USER}_{str(CURRENT_SHAPE).zfill(4)}")
-        to_write.close()
-        win2.destroy()  # close window
+        df = pd.read_csv(CSV_FILE)
+        index = len(df.index)
+        diction = {df.columns[0]: GeneticAlgorithmFrom.parent, df.columns[1]: f'{CURRENT_USER}_{str(CURRENT_SHAPE).zfill(4)}'}
+        df.loc[index] = diction
+        df.to_csv(CSV_FILE, index=False)
+
+        new_win = tk.Toplevel(self.master)
+        to_kill = self.master
+        new_win.title("Saved Successfully")
+        tk.Label(new_win, text=f"Saved to file: {CURRENT_USER}_{str(CURRENT_SHAPE).zfill(4)}.stl", font='Helvetica 24 bold').pack(side=tk.TOP)
+        tk.Button(new_win, text='Exit', command=to_kill.destroy).pack(side=tk.BOTTOM)
 
     def save_and_exit_key(self, event):
         self.get_final_entry()
@@ -626,10 +644,17 @@ class GeneticAlgorithmFrom(tk.Frame):
         my_mesh.save(
             f"{CURRENT_DIRECTORY}/{CURRENT_USER}_{str(CURRENT_SHAPE).zfill(4)}.stl", mode=stl.Mode.BINARY
         )
-        with open(CSV_FILE, "a") as to_write:
-            to_write.write(f"{GeneticAlgorithmFrom.parent},{CURRENT_USER}_{str(CURRENT_SHAPE).zfill(4)}")
-        to_write.close()
-        win2.destroy()  # close window
+        df = pd.read_csv(CSV_FILE)
+        index = len(df.index)
+        diction = {df.columns[0]: GeneticAlgorithmFrom.parent, df.columns[1]: f'{CURRENT_USER}_{str(CURRENT_SHAPE).zfill(4)}'}
+        df.loc[index] = diction
+        df.to_csv(CSV_FILE, index=False)
+
+        new_win = tk.Toplevel(self.master)
+        to_kill = self.master
+        new_win.title("Saved Successfully")
+        tk.Label(new_win, text=f"Saved to file: {CURRENT_USER}_{str(CURRENT_SHAPE).zfill(4)}.stl", font='Helvetica 24 bold').pack(side=tk.TOP)
+        tk.Button(new_win, text='Exit', command=to_kill.destroy).pack(side=tk.BOTTOM)
 
     def get_entry(self):
         self.input_value = GeneticAlgorithmFrom.entry.get()
@@ -757,6 +782,8 @@ class GeneticAlgorithmFile(tk.Frame):
     parent = TO_LOAD[:-4]
 
     def __init__(self, master=None, **kwargs):
+        update_shape()
+        self.master = master
         super().__init__(master, **kwargs)
         figure = Figure(figsize=(12, 8))
         self.fig = figure
@@ -851,10 +878,9 @@ class GeneticAlgorithmFile(tk.Frame):
         GeneticAlgorithmFile.counter += 1
 
     def save(self, to_plot, save_file: str):
-        print(type(to_plot))
         self.get_entry()
         my_mesh = stl.mesh.Mesh(to_plot.copy())
-        my_mesh.save(f"{save_file}.stl", mode=stl.Mode.BINARY)
+        my_mesh.save(f"{save_file}", mode=stl.Mode.BINARY)
 
     def save_and_exit_button(self):
         self.get_final_entry()
@@ -862,10 +888,17 @@ class GeneticAlgorithmFile(tk.Frame):
         my_mesh.save(
             f"{CURRENT_DIRECTORY}/{CURRENT_USER}_{str(CURRENT_SHAPE).zfill(4)}.stl", mode=stl.Mode.BINARY
         )
-        with open(CSV_FILE, "a") as to_write:
-            to_write.write(f"{GeneticAlgorithmFile.parent},{CURRENT_USER}_{str(CURRENT_SHAPE).zfill(4)}")
-        to_write.close()
-        win3.destroy()  # close window
+        df = pd.read_csv(CSV_FILE)
+        index = len(df.index)
+        diction = {df.columns[0]: GeneticAlgorithmFile.parent, df.columns[1]: f'{CURRENT_USER}_{str(CURRENT_SHAPE).zfill(4)}'}
+        df.loc[index] = diction
+        df.to_csv(CSV_FILE, index=False)
+
+        new_win = tk.Toplevel(self.master)
+        to_kill = self.master
+        new_win.title("Saved Successfully")
+        tk.Label(new_win, text=f"Saved to file: {CURRENT_USER}_{str(CURRENT_SHAPE).zfill(4)}.stl", font='Helvetica 24 bold').pack(side=tk.TOP)
+        tk.Button(new_win, text='Exit', command=to_kill.destroy).pack(side=tk.BOTTOM)
 
     def save_and_exit_key(self, event):
         self.get_final_entry()
@@ -873,10 +906,17 @@ class GeneticAlgorithmFile(tk.Frame):
         my_mesh.save(
             f"{CURRENT_DIRECTORY}/{CURRENT_USER}_{str(CURRENT_SHAPE).zfill(4)}.stl", mode=stl.Mode.BINARY
         )
-        with open(CSV_FILE, "a") as to_write:
-            to_write.write(f"{GeneticAlgorithmFile.parent},{CURRENT_USER}_{str(CURRENT_SHAPE).zfill(4)}")
-        to_write.close()
-        win3.destroy()  # close window
+        df = pd.read_csv(CSV_FILE)
+        index = len(df.index)
+        diction = {df.columns[0]: GeneticAlgorithmFile.parent, df.columns[1]: f'{CURRENT_USER}_{str(CURRENT_SHAPE).zfill(4)}'}
+        df.loc[index] = diction
+        df.to_csv(CSV_FILE, index=False)
+
+        new_win = tk.Toplevel(self.master)
+        to_kill = self.master
+        new_win.title("Saved Successfully")
+        tk.Label(new_win, text=f"Saved to file: {CURRENT_USER}_{str(CURRENT_SHAPE).zfill(4)}.stl", font='Helvetica 24 bold').pack(side=tk.TOP)
+        tk.Button(new_win, text='Exit', command=to_kill.destroy).pack(side=tk.BOTTOM)
 
     def get_entry(self):
         self.input_value = GeneticAlgorithmFile.entry.get()
@@ -999,7 +1039,4 @@ class GeneticAlgorithmFile(tk.Frame):
 if __name__ == "__main__":
     get_user()
     s = StartPage()
-    # s.pack()
     win4.mainloop()
-    # print(s.file_thing)
-    # win1.mainloop()

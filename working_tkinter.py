@@ -17,18 +17,19 @@ from stl import mesh
 
 matplotlib.use("TkAgg")
 
-NUM_GEN: int = 10
-C_RATE: float = 0.8
-M_RATE: float = 1
+# Editable params
 T_RATE: float = 1
+CSV_FILE: str = "phylogenetic.csv"
+
+# DO NOT EDIT PLZ
 POP_SIZE: int = 10
 POPULATION: List[ndarray] = []
 CURRENT_DIRECTORY: str = ""
 CURRENT_USER: str = ""
 CURRENT_SHAPE: int = 0
-CSV_FILE: str = "phylogenetic.csv"
 TO_LOAD: str = ""
 
+# Create windows for GUI
 win1 = tk.Tk()
 win1.title("3D Generations")
 win1.rowconfigure(2)
@@ -162,9 +163,7 @@ def initialize_file():
     CURRENT_DIRECTORY = path_setup()
     new_pop = [mesh.Mesh.from_file(CURRENT_DIRECTORY + "/" + TO_LOAD).data for _ in range(POP_SIZE)]
     parent = TO_LOAD
-    print(TO_LOAD)
-    print(TO_LOAD.replace('.stl', ''))
-    return new_pop, parent.replace('.stl', '')
+    return new_pop, parent.replace(".stl", "")
 
 
 def path_setup() -> str:
@@ -236,7 +235,7 @@ class StartPage(tk.Frame):
         self.BeginNewButton.pack()
         self.BeginFromButton = tk.Button(
             win4,
-            text="From Random",
+            text="Random Existing Shape",
             width=25,
             command=from_window,
         )
@@ -379,7 +378,6 @@ class GeneticAlgorithmScratch(tk.Frame):
 
     def save_and_exit_button(self):
         self.get_final_entry()
-        print(self.input_value)
         my_mesh = stl.mesh.Mesh(self._pop[self.input_value - 1].copy())
         my_mesh.save(f"{CURRENT_DIRECTORY}/{CURRENT_USER}_{str(CURRENT_SHAPE).zfill(4)}.stl", mode=stl.Mode.BINARY)
         df = pd.read_csv(CSV_FILE)
@@ -401,7 +399,6 @@ class GeneticAlgorithmScratch(tk.Frame):
 
     def save_and_exit_key(self, event):
         self.get_final_entry()
-        print(self.input_value)
         my_mesh = stl.mesh.Mesh(self._pop[self.input_value - 1].copy())
         my_mesh.save(f"{CURRENT_DIRECTORY}/{CURRENT_USER}_{str(CURRENT_SHAPE).zfill(4)}.stl", mode=stl.Mode.BINARY)
         df = pd.read_csv(CSV_FILE)
@@ -494,13 +491,18 @@ class GeneticAlgorithmScratch(tk.Frame):
                     object["vectors"][i][j] = new_point
 
     def multiply_points(self, point) -> None:
-        if random.randint(0, 1) == 0:
+        if random.randint(0, 2) == 0:
             point *= random.uniform(0.1, 2)
         else:
             point *= random.uniform(-2, -0.1)
         return point
 
     def add_points(self, point: ndarray) -> ndarray:
+        """
+        Take a given point and increase each value within the point by half of the largest value.
+        :param point: an ndarry of shape (3,) to edit
+        :return: the updated point
+        """
         largest: int = max(np.max(point[0]), np.max(point[1]), np.max(point[2]))
         point[0] += int(random.uniform(np.negative(largest / 2), largest / 2))
         point[1] += int(random.uniform(np.negative(largest / 2), largest / 2))

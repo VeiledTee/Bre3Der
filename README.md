@@ -1,5 +1,7 @@
 # Bre3Der
 
+Hi! Thanks for checking this out! Bre3Der is an genetic algorthim that evolves 3D shapes over time.
+
 ## Getting Started
 
 ### Download

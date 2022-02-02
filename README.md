@@ -46,3 +46,14 @@ By opening the ``.csv`` file that appears in the same directory as you ``.py`` f
 previously created. The purpose of this is to generate a phylogenetic tree showing all the different shapes that can be derrived 
 from one parent. If you'd like to explore how many different shapes came from the ``cube`` shape, simply have a look for all 
 instances of ``cube`` in the ``Parents`` column and open up the respective file in the ``Child`` column!
+
+### Send your shapes!
+If you would like your shapes to be uploaded to this repo so others can evolve them please email "bre3Der@gmail.com" with a 
+zip folder containing all your shapes. Please refrain from changing the names/numbers in any of the files after they've been
+saved!
+
+## Feedback
+Any feedback would be greatly appreciated!! Feel free to email me at bre3Der@gmail.com! Anything from UI to nitty gritty 
+formatting is appreciated.
+
+

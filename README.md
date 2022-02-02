@@ -38,7 +38,7 @@ box on the left side of the window, you can pick up right where you (or someone 
 same as the other two methods so I won't rehash it here.
 
 ### Check your parents!
-By opening the ``.csv` file that appears in the same directory as you ``.py`` files, you can see the parents of all the shapes
+By opening the ``.csv`` file that appears in the same directory as you ``.py`` files, you can see the parents of all the shapes
 previously created. The purpose of this is to generate a phylogenetic tree showing all the different shapes that can be derrived 
 from one parent. If you'd like to explore how many different shapes came from the ``cube`` shape, simply have a look for all 
 instances of ``cube`` in the ``Parents`` column and open up the respective file in the ``Child`` column!

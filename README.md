@@ -18,7 +18,7 @@ After the requirements are installed, you can start playing with Bre3Der!
 
 ## Using Bre3Der
 
-When the code is run, you will be prompted to enter a username in your console (do not leave this blank please). After pressing ``enter`` a new window will be opened
+When the ``working_tkinter.py`` code is run, you will be prompted to enter a username in your console (do not leave this blank please). After pressing ``enter`` a new window will be opened
 and you'll be presented with 3 options: From Scratch, Random Existing Shape, or From File.
 
 ### From Scratch

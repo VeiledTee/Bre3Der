@@ -3,7 +3,7 @@
 ## Getting Started
 
 ### Download
-I'd recommend downloading the entire repository by clicking ``Code`` and then the ``Download`` option. If you don't want to download everything, you'll need the following files/folders to get Bre3Der working:
+I'd recommend downloading the entire repository by clicking ``Code`` and then the ``Download Zip`` option. If you don't want to download everything, you'll need the following files/folders to get Bre3Der working:
 * ``Bre3Der.py``
 * ``requirements.txt``
 * Shapes folder

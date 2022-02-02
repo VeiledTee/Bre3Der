@@ -3,7 +3,11 @@
 ## Getting Started
 
 ### Download
-I'd recommend downloading the entire repository. You will need the 
+I'd recommend downloading the entire repository by clicking ``Code`` and then the ``Download`` option. If you don't want to download everything, you'll need the following files/folders to get Bre3Der working:
+* ``Bre3Der.py``
+* ``requirements.txt``
+* Shapes folder
+* ``phylogenetic.csv``
 
 ### Vitural environment
 
@@ -18,7 +22,7 @@ After the requirements are installed, you can start playing with Bre3Der!
 
 ## Using Bre3Der
 
-When the ``working_tkinter.py`` code is run, you will be prompted to enter a username in your console (do not leave this blank please). After pressing ``enter`` a new window will be opened
+When the ``Bre3Der.py`` code is run, you will be prompted to enter a username in your console (do not leave this blank please). After pressing ``enter`` a new window will be opened
 and you'll be presented with 3 options: From Scratch, Random Existing Shape, or From File.
 
 ### From Scratch
@@ -42,13 +46,3 @@ By opening the ``.csv`` file that appears in the same directory as you ``.py`` f
 previously created. The purpose of this is to generate a phylogenetic tree showing all the different shapes that can be derrived 
 from one parent. If you'd like to explore how many different shapes came from the ``cube`` shape, simply have a look for all 
 instances of ``cube`` in the ``Parents`` column and open up the respective file in the ``Child`` column!
-
-
-
-
-
-
-
-
-
-

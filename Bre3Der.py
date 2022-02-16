@@ -20,6 +20,8 @@ matplotlib.use("TkAgg")
 # Editable params
 T_RATE: float = 1
 CSV_FILE: str = "phylogenetic.csv"
+T_DELETE: int = 1  # chance a triangle gets deleted each genration
+P_DELETE: int = 1  # chance all ctriangles connected to a point gets deleted each genration
 
 # DO NOT EDIT PLZ
 POP_SIZE: int = 10
@@ -53,7 +55,11 @@ win4.title("Start")
 
 
 def make_cube() -> ndarray:
-    data = np.zeros(12, dtype=stl.mesh.Mesh.dtype)
+    """
+    Makes a cube using numpy-stl package
+    :return: ndarray representing a cube
+    """
+    data = np.zeros(12, dtype=mesh.Mesh.dtype)
     # Looks like everything is defined as a triangle
     # Top face
     # (x -- left right, y --- front back, z --- up)
@@ -79,7 +85,11 @@ def make_cube() -> ndarray:
 
 
 def make_pyramid() -> ndarray:
-    data = np.zeros(12, dtype=stl.mesh.Mesh.dtype)
+    """
+    Makes a pyramid using numpy-stl package
+    :return: ndarray representing a pyramid
+    """
+    data = np.zeros(8, dtype=mesh.Mesh.dtype)
     # Looks like everything is defined as a triangle
     # Top face
     # (x -- left right, y --- front back, z --- up)
@@ -96,14 +106,20 @@ def make_pyramid() -> ndarray:
 
 
 def get_user() -> None:
+    """
+    Gets current user
+    :return: None
+    """
     global CURRENT_USER
     CURRENT_USER = input("Input your Username: ")
 
 
 def initialize_scratch():
-    # do the population thing
-    # fitness will be an overarching thing, keeping track of which of the shapes
-    # gets selected per generation so we can develop a tree
+    """
+        do the population thing
+        fitness will be an overarching thing, keeping track of which of the shapes
+        gets selected per generation so we can develop a tree
+        """
     global POPULATION
     global CURRENT_USER
     global CURRENT_DIRECTORY
@@ -120,9 +136,11 @@ def initialize_scratch():
 
 
 def initialize_from():
-    # do the population thing
-    # fitness will be an overarching thing, keeping track of which of the shapes
-    # gets selected per generation so we can develop a tree
+    """
+    do the population thing
+    fitness will be an overarching thing, keeping track of which of the shapes
+    gets selected per generation so we can develop a tree
+    """
     global POPULATION
     global CURRENT_USER
     global CURRENT_DIRECTORY
@@ -147,9 +165,11 @@ def initialize_from():
 
 
 def initialize_file():
-    # do the population thing
-    # fitness will be an overarching thing, keeping track of which of the shapes
-    # gets selected per generation so we can develop a tree
+    """
+    do the population thing
+    fitness will be an overarching thing, keeping track of which of the shapes
+    gets selected per generation so we can develop a tree
+    """
     global POPULATION
     global CURRENT_DIRECTORY
     global TO_LOAD
@@ -167,6 +187,10 @@ def initialize_file():
 
 
 def path_setup() -> str:
+    """
+    Set up save path for final shape
+    :return: the full save path
+    """
     cur_path: str = os.getcwd()
     if not os.path.exists(os.path.join(cur_path, "Shapes")):
         os.makedirs(os.path.join(cur_path, "Shapes"))
@@ -174,13 +198,19 @@ def path_setup() -> str:
     return path
 
 
-def update_shape():
+def update_shape() -> None:
+    """
+    Finds how many shapes the user has previously created, adds one, and saves it to the CURRENT_SHAPE variable
+    :return: None
+    """
     global CURRENT_SHAPE
-    files = [int(f[-8:-4]) for f in os.listdir(CURRENT_DIRECTORY) if f.startswith(f"{CURRENT_USER}_")]
+    files = [
+        int(f[-8:-4]) for f in os.listdir(CURRENT_DIRECTORY) if f.startswith(f"{CURRENT_USER}_") and f.endswith(".stl")
+    ]
     if files:
         CURRENT_SHAPE = max(files) + 1
 
-
+# create windows for each possible initialization
 def scratch_window():
     win2.destroy()
     win3.destroy()
@@ -251,7 +281,7 @@ class StartPage(tk.Frame):
     def on_entry_click(self, event):
         """
         function that gets called whenever entry is clicked
-        referenced: https://stackoverflow.com/questions/30491721/how-to-insert-a-temporary-text-in-a-tkinter-entry-widget
+        referenced:https://stackoverflow.com/questions/30491721/how-to-insert-a-temporary-text-in-a-tkinter-entry-widget
         """
         if StartPage.entry.cget("fg") == "grey":
             StartPage.entry.delete(0, "end")  # delete all the text in the entry
@@ -260,7 +290,7 @@ class StartPage(tk.Frame):
 
     def on_focusout(self, event):
         """
-        referenced: https://stackoverflow.com/questions/30491721/how-to-insert-a-temporary-text-in-a-tkinter-entry-widget
+        referenced:https://stackoverflow.com/questions/30491721/how-to-insert-a-temporary-text-in-a-tkinter-entry-widget
         """
         if StartPage.entry.get() == "":
             StartPage.entry.insert(0, "File to load...")
@@ -268,26 +298,26 @@ class StartPage(tk.Frame):
 
 
 class GeneticAlgorithmScratch(tk.Frame):
-    entry = tk.Entry(win1, width=35, bd=1)
+    entry: tk.Entry = tk.Entry(win1, width=35, bd=1)
     entry.insert(0, "Shape number you like the most...")
     entry.config(fg="grey")
     entry.pack(side="left")
-    scratch_pop = initialize_scratch()
+    scratch_pop: List[ndarray] = initialize_scratch()
     counter: int = 0
-    parent = "parent"
+    parent: str = "parent"
 
     def __init__(self, master=None, **kwargs):
         update_shape()
         super().__init__(master, **kwargs)
         self.master = master
-        figure = Figure(figsize=(12, 8))
-        self.fig = figure
-        self.canvas = FigureCanvasTkAgg(figure, master=self)
+        figure: Figure = Figure(figsize=(12, 8))
+        self.fig: Figure = figure
+        self.canvas: FigureCanvasTkAgg = FigureCanvasTkAgg(figure, master=self)
         self.canvas.get_tk_widget().pack()
-        self._pop = GeneticAlgorithmScratch.scratch_pop
+        self._pop: List[ndarray] = GeneticAlgorithmScratch.scratch_pop
         self.plot_start()
         self.input_value = 1
-        self.new_pop = self._pop
+        self.new_pop: List[ndarray] = self._pop
         tk.Button(self, text="    Save    ", command=self.save_and_exit_button).pack(side=tk.BOTTOM)
         tk.Button(self, text="   Evolve   ", command=self.plot_next_button).pack(side=tk.BOTTOM)
         master.bind("<Return>", self.plot_next_key)
@@ -295,9 +325,13 @@ class GeneticAlgorithmScratch(tk.Frame):
         GeneticAlgorithmScratch.entry.bind("<FocusIn>", self.on_entry_click)
         GeneticAlgorithmScratch.entry.bind("<FocusOut>", self.on_focusout)
 
-    def plot_start(self):
+    def plot_start(self) -> None:
+        """
+        Plots the first population of shapes initialized by the initialization function
+        :return: None
+        """
         for i in range(2):
-            msh = mesh.Mesh(self._pop[i])
+            msh: mesh.Mesh = mesh.Mesh(self._pop[i])
             axes = self.fig.add_subplot(2, 1, i + 1, projection="3d")
             axes.set_xlim([-2, 2])
             axes.set_ylim([-2, 2])
@@ -309,7 +343,48 @@ class GeneticAlgorithmScratch(tk.Frame):
             self.canvas.mpl_connect("motion_notify_event", axes._on_move)
         self.fig.canvas.draw()
 
-    def plot_next_button(self):
+    def plot_next_button(self) -> None:
+        """
+        After clicking the "Evolve" button, this function will run
+        Resonsible for updating the current shape's parent parameter, and displaying the next generation of shapes
+        :return: None
+        """
+        self.get_entry()  # update selection
+        if GeneticAlgorithmScratch.counter == 0:
+            # keep track of parents
+            if self.input_value - 1 == 0:
+                GeneticAlgorithmScratch.parent = "cube"
+            elif self.input_value - 1 == 1:
+                GeneticAlgorithmScratch.parent = "pyramid"
+            self.save(
+                self._pop[self.input_value - 1],
+                f"{CURRENT_DIRECTORY}/{GeneticAlgorithmScratch.parent}",
+            )
+
+        self.generate_pop(self.input_value - 1)  # make new pop based on selection
+        self.fig.clear()  # clear old figures
+        self.fig.suptitle(f"Generation {GeneticAlgorithmScratch.counter}")
+        # do the plotting thing
+        for i in range(POP_SIZE):
+            msh: mesh.Mesh = mesh.Mesh(self._pop[i])
+            axes = self.fig.add_subplot(2, 5, i + 1, projection="3d")
+            axes.set_xlim([-2, 2])
+            axes.set_ylim([-2, 2])
+            axes.set_zlim([-2, 2])
+            axes.title.set_text(f"Shape {i + 1}")
+            axes.add_collection3d(mplot3d.art3d.Poly3DCollection(msh.vectors))
+            self.canvas.mpl_connect("button_press_event", axes._button_press)
+            self.canvas.mpl_connect("button_release_event", axes._button_release)
+            self.canvas.mpl_connect("motion_notify_event", axes._on_move)
+        self.fig.canvas.draw()
+        GeneticAlgorithmScratch.counter += 1
+
+    def plot_next_key(self, event) -> None:
+        """
+        After clicking <enter>, this function will run
+        Resonsible for updating the current shape's parent parameter, and displaying the next generation of shapes
+        :return: None
+        """
         self.get_entry()  # update selection
         if GeneticAlgorithmScratch.counter == 0:
             # keep track of parents
@@ -340,45 +415,25 @@ class GeneticAlgorithmScratch(tk.Frame):
         self.fig.canvas.draw()
         GeneticAlgorithmScratch.counter += 1
 
-    def plot_next_key(self, event):
-        self.get_entry()  # update selection
-        if GeneticAlgorithmScratch.counter == 0:
-            # keep track of parents
-            if self.input_value - 1 == 0:
-                GeneticAlgorithmScratch.parent = "cube"
-            elif self.input_value - 1 == 1:
-                GeneticAlgorithmScratch.parent = "pyramid"
-            self.save(
-                self._pop[self.input_value - 1],
-                f"{CURRENT_DIRECTORY}/{GeneticAlgorithmScratch.parent}",
-            )
-
-        self.generate_pop(self.input_value - 1)  # make new pop based on selection
-        self.fig.clear()  # clear old figures
-        self.fig.suptitle(f"Generation {GeneticAlgorithmScratch.counter}")
-        # do the plotting thing
-        for i in range(POP_SIZE):
-            msh = mesh.Mesh(self._pop[i])
-            axes = self.fig.add_subplot(2, 5, i + 1, projection="3d")
-            axes.set_xlim([-2, 2])
-            axes.set_ylim([-2, 2])
-            axes.set_zlim([-2, 2])
-            axes.title.set_text(f"Shape {i + 1}")
-            axes.add_collection3d(mplot3d.art3d.Poly3DCollection(msh.vectors))
-            self.canvas.mpl_connect("button_press_event", axes._button_press)
-            self.canvas.mpl_connect("button_release_event", axes._button_release)
-            self.canvas.mpl_connect("motion_notify_event", axes._on_move)
-        self.fig.canvas.draw()
-        GeneticAlgorithmScratch.counter += 1
-
-    def save(self, to_plot, save_file: str):
+    def save(self, to_save, save_file: str):
+        """
+        Saves the passed shape
+        :param to_save: The shape to save
+        :param save_file: The file name to save the shape to
+        :return:
+        """
         self.get_entry()
-        my_mesh = stl.mesh.Mesh(to_plot.copy())
+        my_mesh: mesh.Mesh = mesh.Mesh(to_save.copy())
         my_mesh.save(f"{save_file}.stl", mode=stl.Mode.BINARY)
 
-    def save_and_exit_button(self):
+    def save_and_exit_button(self) -> None:
+        """
+        Upon clicking the "Save" button, this function will be executed
+        Takes the user's current selection, and saves it to an stl file following Bre3Der's naming convention.
+        :return: None
+        """
         self.get_final_entry()
-        my_mesh = stl.mesh.Mesh(self._pop[self.input_value - 1].copy())
+        my_mesh = mesh.Mesh(self._pop[self.input_value - 1].copy())
         my_mesh.save(f"{CURRENT_DIRECTORY}/{CURRENT_USER}_{str(CURRENT_SHAPE).zfill(4)}.stl", mode=stl.Mode.BINARY)
         df = pd.read_csv(CSV_FILE)
         index = len(df.index)
@@ -397,9 +452,14 @@ class GeneticAlgorithmScratch(tk.Frame):
         ).pack(side=tk.TOP)
         tk.Button(new_win, text="Exit", command=to_kill.destroy).pack(side=tk.BOTTOM)
 
-    def save_and_exit_key(self, event):
+    def save_and_exit_key(self, event) -> None:
+        """
+        Upon clicking <esc>, this function will be executed
+        Takes the user's current selection, and saves it to an stl file following Bre3Der's naming convention.
+        :return: None
+        """
         self.get_final_entry()
-        my_mesh = stl.mesh.Mesh(self._pop[self.input_value - 1].copy())
+        my_mesh = mesh.Mesh(self._pop[self.input_value - 1].copy())
         my_mesh.save(f"{CURRENT_DIRECTORY}/{CURRENT_USER}_{str(CURRENT_SHAPE).zfill(4)}.stl", mode=stl.Mode.BINARY)
         df = pd.read_csv(CSV_FILE)
         index = len(df.index)
@@ -418,27 +478,47 @@ class GeneticAlgorithmScratch(tk.Frame):
         ).pack(side=tk.TOP)
         tk.Button(new_win, text="Exit", command=to_kill.destroy).pack(side=tk.BOTTOM)
 
-    def get_entry(self):
+    def get_entry(self) -> None:
+        """
+        Gets the user's current selection and updates the class' attribute
+        :return: None
+        """
         self.input_value = GeneticAlgorithmScratch.entry.get()
         if self.input_value == "":
             self.input_value = 1
         else:
             try:
-                self.input_value = int(self.input_value)
+                if int(self.input_value) > 0 and int(self.input_value) <= 10:
+                    self.input_value = int(self.input_value)
+                else:
+                    self.error_window()
             except ValueError:
                 self.error_window()
 
-    def get_final_entry(self):
+    def get_final_entry(self) -> None:
+        """
+        Gets the user's final selection and updates the class' attribute
+        :return: None
+        """
         self.input_value = GeneticAlgorithmScratch.entry.get()
         if self.input_value == "":
             self.input_value = 1
         else:
             try:
-                self.input_value = int(self.input_value)
+                if int(self.input_value) > 0 and int(self.input_value) <= 10:
+                    self.input_value = int(self.input_value)
+                else:
+                    self.error_window()
             except ValueError:
                 self.error_window()
 
     def generate_pop(self, selected: int) -> None:
+        """
+        The heart of Bre3Der, this fucntion executes the generational seection process and mutations in order to display
+        new shapes to the user
+        :param selected: The shape that was selected by the user
+        :return: None
+        """
         parent: ndarray = self._pop[selected]
         self.new_pop: List[ndarray] = [deepcopy(parent) for _ in range(POP_SIZE)]
         for i in range(POP_SIZE):  # for the pop size
@@ -449,31 +529,80 @@ class GeneticAlgorithmScratch(tk.Frame):
                 self.new_pop[i] = self.break_up_triangle(
                     to_break=self.new_pop[i]["vectors"][t], index=t, parent=self.new_pop[i]
                 )  # make more triangles
+            # Are we deleting a triangle?
+            if np.random.uniform(0, 1) < T_DELETE:
+                self.new_pop[i] = self.delete_triangle(self.new_pop[i])
+            # Are we deleting all triangles connected to a point?
+            if np.random.uniform(0, 1) < P_DELETE:
+                self.new_pop[i] = self.delete_point(self.new_pop[i])
             if np.random.randint(0, 2) % 2 == 0:
                 self.point_manipulation(self.new_pop[i], self.multiply_points)  # multiply a point by random value
             else:
                 self.point_manipulation(self.new_pop[i], self.add_points)  # add a random value to a point
         self._pop = self.new_pop
 
-    def on_entry_click(self, event):
+    def delete_triangle(self, obj: ndarray) -> ndarray:
+        """
+        Randomly selects a triangle from the passed shape and deletes it
+        :param obj: Shape we are deleting a triangle from
+        :return: Altered shape
+        """
+        i = np.random.randint(len(obj['vectors']))
+        cur = np.zeros(len(obj['vectors']) - 1, dtype=stl.mesh.Mesh.dtype)
+        cur['vectors'] = np.delete(obj['vectors'], range(i, i + 9)).reshape(obj['vectors'].shape[0] - 1,
+                                                                            obj['vectors'].shape[1],
+                                                                            obj['vectors'].shape[2])
+        return cur
+
+    def delete_point(self, obj: ndarray) -> ndarray:
+        """
+        If there are more than 10 triangles making a shape, randomly select a point
+        and delete all triangles connected to it
+        :param obj: Shape to delete triangles from
+        :return: Altered shape
+        """
+        if len(obj) < 10:
+            return obj
+        point = obj['vectors'][np.random.randint(0, len(obj['vectors']))][np.random.randint(0, 3)]
+        mask = []
+        for v in obj['vectors']:
+            if point.tolist() in v.tolist():
+                mask.append(False)
+            else:
+                mask.append(True)
+        mask_sum = np.sum(mask)
+        print(f"num true: {mask_sum}")
+        cur = np.zeros(mask_sum, dtype=stl.mesh.Mesh.dtype)
+        a = []
+        for i, boolean in enumerate(mask):
+            if boolean:
+                a.append(obj['vectors'][i])
+        cur['vectors'] = np.array(a)
+        return cur
+
+    def on_entry_click(self, event) -> None:
         """
         function that gets called whenever entry is clicked
-        referenced: https://stackoverflow.com/questions/30491721/how-to-insert-a-temporary-text-in-a-tkinter-entry-widget
+        referenced:https://stackoverflow.com/questions/30491721/how-to-insert-a-temporary-text-in-a-tkinter-entry-widget
         """
         if GeneticAlgorithmScratch.entry.cget("fg") == "grey":
             GeneticAlgorithmScratch.entry.delete(0, "end")  # delete all the text in the entry
             GeneticAlgorithmScratch.entry.insert(0, "")  # Insert blank for user input
             GeneticAlgorithmScratch.entry.config(fg="black")
 
-    def on_focusout(self, event):
+    def on_focusout(self, event) -> None:
         """
-        referenced: https://stackoverflow.com/questions/30491721/how-to-insert-a-temporary-text-in-a-tkinter-entry-widget
+        referenced:https://stackoverflow.com/questions/30491721/how-to-insert-a-temporary-text-in-a-tkinter-entry-widget
         """
         if GeneticAlgorithmScratch.entry.get() == "":
             GeneticAlgorithmScratch.entry.insert(0, "Shape number you like the most...")
             GeneticAlgorithmScratch.entry.config(fg="grey")
 
-    def error_window(self):
+    def error_window(self) -> None:
+        """
+        Generates error window for GUI
+        :return: None
+        """
         msg = tk.Toplevel()
         msg.title("WARNING")
         tk.Label(msg, text="Only input numbers between 1 and the total number of shapes").pack()
@@ -481,6 +610,12 @@ class GeneticAlgorithmScratch(tk.Frame):
         msg.bind("<Return>", lambda destroy: msg.destroy())
 
     def point_manipulation(self, object: ndarray, manipulation) -> None:
+        """
+        Manipulates points within an object using passed function
+        :param object: object we are manipulating
+        :param manipulation: the function that will manipulate the object
+        :return: None
+        """
         index = np.random.randint(len(object["vectors"]))
         point = object["vectors"][index][random.randint(0, 2)]
         compare = deepcopy(point)
@@ -490,7 +625,12 @@ class GeneticAlgorithmScratch(tk.Frame):
                 if list(object["vectors"][i][j]) == list(compare):
                     object["vectors"][i][j] = new_point
 
-    def multiply_points(self, point) -> None:
+    def multiply_points(self, point) -> ndarray:
+        """
+        Mutation - performs multiplication on a specific point, essentially scaling the values
+        :param point:
+        :return:
+        """
         if random.randint(0, 2) == 0:
             point *= random.uniform(0.1, 2)
         else:
@@ -499,7 +639,7 @@ class GeneticAlgorithmScratch(tk.Frame):
 
     def add_points(self, point: ndarray) -> ndarray:
         """
-        Take a given point and increase each value within the point by half of the largest value.
+        Mutation - Take a given point and increase each value within the point by half of the largest value
         :param point: an ndarry of shape (3,) to edit
         :return: the updated point
         """
@@ -510,6 +650,11 @@ class GeneticAlgorithmScratch(tk.Frame):
         return point
 
     def midpoint(self, coords: ndarray) -> ndarray:
+        """
+        Calauclates the midpoints of each edge of a triangle
+        :param coords: the triangle
+        :return: ndarray of coordinates representing the midpoints
+        """
         final_list: List[List[float]] = []
         for i in range(coords.shape[0]):
             if i + 1 == coords.shape[0]:
@@ -531,7 +676,7 @@ class GeneticAlgorithmScratch(tk.Frame):
         """
         midpoints: ndarray = self.midpoint(to_break)
         # increase the size of the DATA object by 3 for the new sides we are adding
-        new_data = np.zeros(parent.shape[0] + 3, dtype=stl.mesh.Mesh.dtype)
+        new_data = np.zeros(parent.shape[0] + 3, dtype=mesh.Mesh.dtype)
         for v in range(len(parent["vectors"])):
             new_data["vectors"][v] = deepcopy(parent["vectors"][v])
         new_data["vectors"][index] = np.array((midpoints[0], midpoints[1], midpoints[2]))
@@ -568,7 +713,11 @@ class GeneticAlgorithmFrom(tk.Frame):
         GeneticAlgorithmFrom.entry.bind("<FocusIn>", self.on_entry_click)
         GeneticAlgorithmFrom.entry.bind("<FocusOut>", self.on_focusout)
 
-    def plot_start(self):
+    def plot_start(self) -> None:
+        """
+        Plots the first population of shapes initialized by the initialization function
+        :return: None
+        """
         for i in range(POP_SIZE):
             msh = mesh.Mesh(self._pop[i])
             axes = self.fig.add_subplot(2, 5, i + 1, projection="3d")
@@ -582,7 +731,12 @@ class GeneticAlgorithmFrom(tk.Frame):
             self.canvas.mpl_connect("motion_notify_event", axes._on_move)
         self.fig.canvas.draw()
 
-    def plot_next_button(self):
+    def plot_next_button(self) -> None:
+        """
+        After clicking the "Evolve" button, this function will run
+        Resonsible for updating the current shape's parent parameter, and displaying the next generation of shapes
+        :return: None
+        """
         self.get_entry()  # update selection
         if GeneticAlgorithmFrom.counter == 0:
             # keep track of parents
@@ -610,7 +764,12 @@ class GeneticAlgorithmFrom(tk.Frame):
         self.fig.canvas.draw()
         GeneticAlgorithmFrom.counter += 1
 
-    def plot_next_key(self, event):
+    def plot_next_key(self, event) -> None:
+        """
+        After clicking <enter>, this function will run
+        Resonsible for updating the current shape's parent parameter, and displaying the next generation of shapes
+        :return: None
+        """
         self.get_entry()  # update selection
         if GeneticAlgorithmFrom.counter == 0:
             # keep track of parents
@@ -638,15 +797,26 @@ class GeneticAlgorithmFrom(tk.Frame):
         self.fig.canvas.draw()
         GeneticAlgorithmFrom.counter += 1
 
-    def save(self, to_plot, save_file: str):
+    def save(self, to_plot, save_file: str) -> None:
+        """
+        Saves the passed shape
+        :param to_save: The shape to save
+        :param save_file: The file name to save the shape to
+        :return:
+        """
         self.get_entry()
-        my_mesh = stl.mesh.Mesh(to_plot.copy())
-        my_mesh.save(f"{save_file}", mode=stl.Mode.BINARY)
+        my_mesh: mesh.Mesh = mesh.Mesh(to_plot.copy())
+        my_mesh.save(f"{save_file}.stl", mode=stl.Mode.BINARY)
 
-    def save_and_exit_button(self):
+    def save_and_exit_button(self) -> None:
+        """
+        Upon clicking the "Save" button, this function will be executed
+        Takes the user's current selection, and saves it to an stl file following Bre3Der's naming convention.
+        :return: None
+        """
         self.get_final_entry()
-        my_mesh = stl.mesh.Mesh(self._pop[self.input_value - 1].copy())
-        my_mesh.save(f"{CURRENT_DIRECTORY}/{CURRENT_USER}_{str(CURRENT_SHAPE).zfill(4)}", mode=stl.Mode.BINARY)
+        my_mesh: mesh.Mesh = mesh.Mesh(self._pop[self.input_value - 1].copy())
+        my_mesh.save(f"{CURRENT_DIRECTORY}/{CURRENT_USER}_{str(CURRENT_SHAPE).zfill(4)}.stl", mode=stl.Mode.BINARY)
         df = pd.read_csv(CSV_FILE)
         index = len(df.index)
         diction = {
@@ -664,10 +834,15 @@ class GeneticAlgorithmFrom(tk.Frame):
         ).pack(side=tk.TOP)
         tk.Button(new_win, text="Exit", command=to_kill.destroy).pack(side=tk.BOTTOM)
 
-    def save_and_exit_key(self, event):
+    def save_and_exit_key(self, event) -> None:
+        """
+        Upon clicking <esc>, this function will be executed
+        Takes the user's current selection, and saves it to an stl file following Bre3Der's naming convention.
+        :return: None
+        """
         self.get_final_entry()
-        my_mesh = stl.mesh.Mesh(self._pop[self.input_value - 1].copy())
-        my_mesh.save(f"{CURRENT_DIRECTORY}/{CURRENT_USER}_{str(CURRENT_SHAPE).zfill(4)}", mode=stl.Mode.BINARY)
+        my_mesh = mesh.Mesh(self._pop[self.input_value - 1].copy())
+        my_mesh.save(f"{CURRENT_DIRECTORY}/{CURRENT_USER}_{str(CURRENT_SHAPE).zfill(4)}.stl", mode=stl.Mode.BINARY)
         df = pd.read_csv(CSV_FILE)
         index = len(df.index)
         diction = {
@@ -685,62 +860,129 @@ class GeneticAlgorithmFrom(tk.Frame):
         ).pack(side=tk.TOP)
         tk.Button(new_win, text="Exit", command=to_kill.destroy).pack(side=tk.BOTTOM)
 
-    def get_entry(self):
-        self.input_value = GeneticAlgorithmFrom.entry.get()
+    def get_entry(self) -> None:
+        """
+        Gets the user's current selection and updates the class' attribute
+        :return: None
+        """
+        self.input_value = GeneticAlgorithmScratch.entry.get()
         if self.input_value == "":
             self.input_value = 1
         else:
             try:
-                self.input_value = int(self.input_value)
+                if int(self.input_value) > 0 and int(self.input_value) <= 10:
+                    self.input_value = int(self.input_value)
+                else:
+                    self.error_window()
             except ValueError:
                 self.error_window()
 
-    def get_final_entry(self):
-        self.input_value = GeneticAlgorithmFrom.entry.get()
-        if type(self.input_value) != int:
+    def get_final_entry(self) -> None:
+        """
+        Gets the user's final selection and updates the class' attribute
+        :return: None
+        """
+        self.input_value = GeneticAlgorithmScratch.entry.get()
+        if self.input_value == "":
             self.input_value = 1
         else:
             try:
-                self.input_value = int(self.input_value)
+                if int(self.input_value) > 0 and int(self.input_value) <= 10:
+                    self.input_value = int(self.input_value)
+                else:
+                    self.error_window()
             except ValueError:
                 self.error_window()
 
     def generate_pop(self, selected: int) -> None:
+        """
+        The heart of Bre3Der, this fucntion executes the generational seection process and mutations in order to display
+        new shapes to the user
+        :param selected: The shape that was selected by the user
+        :return: None
+        """
         parent: ndarray = self._pop[selected]
         self.new_pop: List[ndarray] = [deepcopy(parent) for _ in range(POP_SIZE)]
         for i in range(POP_SIZE):  # for the pop size
             if (
-                np.random.uniform(0, 1) < T_RATE and GeneticAlgorithmFile.counter > 0
+                np.random.uniform(0, 1) < T_RATE and GeneticAlgorithmScratch.counter > 0
             ):  # if not first evolution and we make new triangle
                 t = np.random.randint(0, len(self.new_pop[i]["vectors"]))  # choose random triangle
                 self.new_pop[i] = self.break_up_triangle(
                     to_break=self.new_pop[i]["vectors"][t], index=t, parent=self.new_pop[i]
                 )  # make more triangles
+            if np.random.uniform(0, 1) < T_DELETE:
+                self.new_pop[i] = self.delete_triangle(self.new_pop[i])
+            if np.random.uniform(0, 1) < P_DELETE:
+                self.new_pop[i] = self.delete_point(self.new_pop[i])
             if np.random.randint(0, 2) % 2 == 0:
                 self.point_manipulation(self.new_pop[i], self.multiply_points)  # multiply a point by random value
             else:
                 self.point_manipulation(self.new_pop[i], self.add_points)  # add a random value to a point
         self._pop = self.new_pop
 
-    def on_entry_click(self, event):
+    def delete_triangle(self, obj: ndarray) -> ndarray:
+        """
+        Randomly selects a triangle from the passed shape and deletes it
+        :param obj: Shape we are deleting a triangle from
+        :return: Altered shape
+        """
+        i = np.random.randint(len(obj["vectors"]))
+        cur = np.zeros(len(obj["vectors"]) - 1, dtype=mesh.Mesh.dtype)
+        cur["vectors"] = np.delete(obj["vectors"], range(i, i + 9)).reshape(
+            obj["vectors"].shape[0] - 1, obj["vectors"].shape[1], obj["vectors"].shape[2]
+        )
+        return cur
+
+    def delete_point(self, obj: ndarray) -> ndarray:
+        """
+        If there are more than 10 triangles making a shape, randomly select a point
+        and delete all triangles connected to it
+        :param obj: Shape to delete triangles from
+        :return: Altered shape
+        """
+        if len(obj) < 10:
+            return obj
+        point = obj['vectors'][np.random.randint(0, len(obj['vectors']))][np.random.randint(0, 3)]
+        mask = []
+        for v in obj['vectors']:
+            if point.tolist() in v.tolist():
+                mask.append(False)
+            else:
+                mask.append(True)
+        mask_sum = np.sum(mask)
+        print(f"num true: {mask_sum}")
+        cur = np.zeros(mask_sum, dtype=stl.mesh.Mesh.dtype)
+        a = []
+        for i, boolean in enumerate(mask):
+            if boolean:
+                a.append(obj['vectors'][i])
+        cur['vectors'] = np.array(a)
+        return cur
+
+    def on_entry_click(self, event) -> None:
         """
         function that gets called whenever entry is clicked
-        referenced: https://stackoverflow.com/questions/30491721/how-to-insert-a-temporary-text-in-a-tkinter-entry-widget
+        referenced:https://stackoverflow.com/questions/30491721/how-to-insert-a-temporary-text-in-a-tkinter-entry-widget
         """
         if GeneticAlgorithmFrom.entry.cget("fg") == "grey":
             GeneticAlgorithmFrom.entry.delete(0, "end")  # delete all the text in the entry
             GeneticAlgorithmFrom.entry.insert(0, "")  # Insert blank for user input
             GeneticAlgorithmFrom.entry.config(fg="black")
 
-    def on_focusout(self, event):
+    def on_focusout(self, event) -> None:
         """
-        referenced: https://stackoverflow.com/questions/30491721/how-to-insert-a-temporary-text-in-a-tkinter-entry-widget
+        referenced:https://stackoverflow.com/questions/30491721/how-to-insert-a-temporary-text-in-a-tkinter-entry-widget
         """
         if GeneticAlgorithmFrom.entry.get() == "":
             GeneticAlgorithmFrom.entry.insert(0, "Shape number you like the most...")
             GeneticAlgorithmFrom.entry.config(fg="grey")
 
-    def error_window(self):
+    def error_window(self) -> None:
+        """
+        Generates error window for GUI
+        :return: None
+        """
         msg = tk.Toplevel()
         msg.title("WARNING")
         tk.Label(msg, text="Only input numbers between 1 and the total number of shapes").pack()
@@ -748,6 +990,12 @@ class GeneticAlgorithmFrom(tk.Frame):
         msg.bind("<Return>", lambda destroy: msg.destroy())
 
     def point_manipulation(self, object: ndarray, manipulation) -> None:
+        """
+        Manipulates points within an object using passed function
+        :param object: object we are manipulating
+        :param manipulation: the function that will manipulate the object
+        :return: None
+        """
         index = np.random.randint(len(object["vectors"]))
         point = object["vectors"][index][random.randint(0, 2)]
         compare = deepcopy(point)
@@ -757,14 +1005,24 @@ class GeneticAlgorithmFrom(tk.Frame):
                 if list(object["vectors"][i][j]) == list(compare):
                     object["vectors"][i][j] = new_point
 
-    def multiply_points(self, point) -> None:
-        if random.randint(0, 1) == 0:
+    def multiply_points(self, point) -> ndarray:
+        """
+        Mutation - performs multiplication on a specific point, essentially scaling the values
+        :param point:
+        :return:
+        """
+        if random.randint(0, 2) == 0:
             point *= random.uniform(0.1, 2)
         else:
             point *= random.uniform(-2, -0.1)
         return point
 
     def add_points(self, point: ndarray) -> ndarray:
+        """
+        Mutation - Take a given point and increase each value within the point by half of the largest value
+        :param point: an ndarry of shape (3,) to edit
+        :return: the updated point
+        """
         largest: int = max(np.max(point[0]), np.max(point[1]), np.max(point[2]))
         point[0] += int(random.uniform(np.negative(largest / 2), largest / 2))
         point[1] += int(random.uniform(np.negative(largest / 2), largest / 2))
@@ -772,6 +1030,11 @@ class GeneticAlgorithmFrom(tk.Frame):
         return point
 
     def midpoint(self, coords: ndarray) -> ndarray:
+        """
+        Calauclates the midpoints of each edge of a triangle
+        :param coords: the triangle
+        :return: ndarray of coordinates representing the midpoints
+        """
         final_list: List[List[float]] = []
         for i in range(coords.shape[0]):
             if i + 1 == coords.shape[0]:
@@ -793,7 +1056,7 @@ class GeneticAlgorithmFrom(tk.Frame):
         """
         midpoints: ndarray = self.midpoint(to_break)
         # increase the size of the DATA object by 3 for the new sides we are adding
-        new_data = np.zeros(parent.shape[0] + 3, dtype=stl.mesh.Mesh.dtype)
+        new_data = np.zeros(parent.shape[0] + 3, dtype=mesh.Mesh.dtype)
         for v in range(len(parent["vectors"])):
             new_data["vectors"][v] = deepcopy(parent["vectors"][v])
         new_data["vectors"][index] = np.array((midpoints[0], midpoints[1], midpoints[2]))
@@ -830,7 +1093,11 @@ class GeneticAlgorithmFile(tk.Frame):
         GeneticAlgorithmFile.entry.bind("<FocusIn>", self.on_entry_click)
         GeneticAlgorithmFile.entry.bind("<FocusOut>", self.on_focusout)
 
-    def plot_start(self):
+    def plot_start(self) -> None:
+        """
+        Plots the first population of shapes initialized by the initialization function
+        :return: None
+        """
         self.generate_pop(0)
         for i in range(POP_SIZE):
             msh = mesh.Mesh(self._pop[i])
@@ -845,7 +1112,12 @@ class GeneticAlgorithmFile(tk.Frame):
             self.canvas.mpl_connect("motion_notify_event", axes._on_move)
         self.fig.canvas.draw()
 
-    def plot_next_button(self):
+    def plot_next_button(self) -> None:
+        """
+        After clicking the "Evolve" button, this function will run
+        Resonsible for updating the current shape's parent parameter, and displaying the next generation of shapes
+        :return: None
+        """
         self.get_entry()  # update selection
         if GeneticAlgorithmFile.counter == 0:
             # keep track of parent
@@ -872,7 +1144,12 @@ class GeneticAlgorithmFile(tk.Frame):
         self.fig.canvas.draw()
         GeneticAlgorithmFile.counter += 1
 
-    def plot_next_key(self, event):
+    def plot_next_key(self, event) -> None:
+        """
+        After clicking <enter>, this function will run
+        Resonsible for updating the current shape's parent parameter, and displaying the next generation of shapes
+        :return: None
+        """
         self.get_entry()  # update selection
         if GeneticAlgorithmFile.counter == 0:
             # keep track of parent
@@ -899,14 +1176,25 @@ class GeneticAlgorithmFile(tk.Frame):
         self.fig.canvas.draw()
         GeneticAlgorithmFile.counter += 1
 
-    def save(self, to_plot, save_file: str):
+    def save(self, to_plot, save_file: str) -> None:
+        """
+        Saves the passed shape
+        :param to_save: The shape to save
+        :param save_file: The file name to save the shape to
+        :return:
+        """
         self.get_entry()
-        my_mesh = stl.mesh.Mesh(to_plot.copy())
+        my_mesh: mesh.Mesh = mesh.Mesh(to_plot.copy())
         my_mesh.save(f"{save_file}", mode=stl.Mode.BINARY)
 
     def save_and_exit_button(self):
+        """
+        Upon clicking the "Save" button, this function will be executed
+        Takes the user's current selection, and saves it to an stl file following Bre3Der's naming convention.
+        :return: None
+        """
         self.get_final_entry()
-        my_mesh = stl.mesh.Mesh(self._pop[self.input_value - 1].copy())
+        my_mesh: mesh.Mesh = mesh.Mesh(self._pop[self.input_value - 1].copy())
         my_mesh.save(f"{CURRENT_DIRECTORY}/{CURRENT_USER}_{str(CURRENT_SHAPE).zfill(4)}.stl", mode=stl.Mode.BINARY)
         df = pd.read_csv(CSV_FILE)
         index = len(df.index)
@@ -925,9 +1213,14 @@ class GeneticAlgorithmFile(tk.Frame):
         ).pack(side=tk.TOP)
         tk.Button(new_win, text="Exit", command=to_kill.destroy).pack(side=tk.BOTTOM)
 
-    def save_and_exit_key(self, event):
+    def save_and_exit_key(self, event) -> None:
+        """
+        Upon clicking <esc>, this function will be executed
+        Takes the user's current selection, and saves it to an stl file following Bre3Der's naming convention.
+        :return: None
+        """
         self.get_final_entry()
-        my_mesh = stl.mesh.Mesh(self._pop[self.input_value - 1].copy())
+        my_mesh = mesh.Mesh(self._pop[self.input_value - 1].copy())
         my_mesh.save(f"{CURRENT_DIRECTORY}/{CURRENT_USER}_{str(CURRENT_SHAPE).zfill(4)}.stl", mode=stl.Mode.BINARY)
         df = pd.read_csv(CSV_FILE)
         index = len(df.index)
@@ -946,62 +1239,129 @@ class GeneticAlgorithmFile(tk.Frame):
         ).pack(side=tk.TOP)
         tk.Button(new_win, text="Exit", command=to_kill.destroy).pack(side=tk.BOTTOM)
 
-    def get_entry(self):
-        self.input_value = GeneticAlgorithmFile.entry.get()
+    def get_entry(self) -> None:
+        """
+        Gets the user's current selection and updates the class' attribute
+        :return: None
+        """
+        self.input_value = GeneticAlgorithmScratch.entry.get()
         if self.input_value == "":
             self.input_value = 1
         else:
             try:
-                self.input_value = int(self.input_value)
+                if int(self.input_value) > 0 and int(self.input_value) <= 10:
+                    self.input_value = int(self.input_value)
+                else:
+                    self.error_window()
             except ValueError:
                 self.error_window()
 
-    def get_final_entry(self):
-        self.input_value = GeneticAlgorithmFile.entry.get()
-        if type(self.input_value) != int:
+    def get_final_entry(self) -> None:
+        """
+        Gets the user's final selection and updates the class' attribute
+        :return: None
+        """
+        self.input_value = GeneticAlgorithmScratch.entry.get()
+        if self.input_value == "":
             self.input_value = 1
         else:
             try:
-                self.input_value = int(self.input_value)
+                if int(self.input_value) > 0 and int(self.input_value) <= 10:
+                    self.input_value = int(self.input_value)
+                else:
+                    self.error_window()
             except ValueError:
                 self.error_window()
 
     def generate_pop(self, selected: int) -> None:
+        """
+        The heart of Bre3Der, this fucntion executes the generational seection process and mutations in order to display
+        new shapes to the user
+        :param selected: The shape that was selected by the user
+        :return: None
+        """
         parent: ndarray = self._pop[selected]
         self.new_pop: List[ndarray] = [deepcopy(parent) for _ in range(POP_SIZE)]
         for i in range(POP_SIZE):  # for the pop size
             if (
-                np.random.uniform(0, 1) < T_RATE and GeneticAlgorithmFile.counter > 0
+                np.random.uniform(0, 1) < T_RATE and GeneticAlgorithmScratch.counter > 0
             ):  # if not first evolution and we make new triangle
                 t = np.random.randint(0, len(self.new_pop[i]["vectors"]))  # choose random triangle
                 self.new_pop[i] = self.break_up_triangle(
                     to_break=self.new_pop[i]["vectors"][t], index=t, parent=self.new_pop[i]
                 )  # make more triangles
+            if np.random.uniform(0, 1) < T_DELETE:
+                self.new_pop[i] = self.delete_triangle(self.new_pop[i])
+            if np.random.uniform(0, 1) < P_DELETE:
+                self.new_pop[i] = self.delete_point(self.new_pop[i])
             if np.random.randint(0, 2) % 2 == 0:
                 self.point_manipulation(self.new_pop[i], self.multiply_points)  # multiply a point by random value
             else:
                 self.point_manipulation(self.new_pop[i], self.add_points)  # add a random value to a point
         self._pop = self.new_pop
 
-    def on_entry_click(self, event):
+    def delete_triangle(self, obj: ndarray) -> ndarray:
+        """
+        Randomly selects a triangle from the passed shape and deletes it
+        :param obj: Shape we are deleting a triangle from
+        :return: Altered shape
+        """
+        i = np.random.randint(len(obj["vectors"]))
+        cur = np.zeros(len(obj["vectors"]) - 1, dtype=mesh.Mesh.dtype)
+        cur["vectors"] = np.delete(obj["vectors"], range(i, i + 9)).reshape(
+            obj["vectors"].shape[0] - 1, obj["vectors"].shape[1], obj["vectors"].shape[2]
+        )
+        return cur
+
+    def delete_point(self, obj: ndarray) -> ndarray:
+        """
+        If there are more than 10 triangles making a shape, randomly select a point
+        and delete all triangles connected to it
+        :param obj: Shape to delete triangles from
+        :return: Altered shape
+        """
+        if len(obj) < 10:
+            return obj
+        point = obj['vectors'][np.random.randint(0, len(obj['vectors']))][np.random.randint(0, 3)]
+        mask = []
+        for v in obj['vectors']:
+            if point.tolist() in v.tolist():
+                mask.append(False)
+            else:
+                mask.append(True)
+        mask_sum = np.sum(mask)
+        print(f"num true: {mask_sum}")
+        cur = np.zeros(mask_sum, dtype=stl.mesh.Mesh.dtype)
+        a = []
+        for i, boolean in enumerate(mask):
+            if boolean:
+                a.append(obj['vectors'][i])
+        cur['vectors'] = np.array(a)
+        return cur
+
+    def on_entry_click(self, event) -> None:
         """
         function that gets called whenever entry is clicked
-        referenced: https://stackoverflow.com/questions/30491721/how-to-insert-a-temporary-text-in-a-tkinter-entry-widget
+        referenced:https://stackoverflow.com/questions/30491721/how-to-insert-a-temporary-text-in-a-tkinter-entry-widget
         """
         if GeneticAlgorithmFile.entry.cget("fg") == "grey":
             GeneticAlgorithmFile.entry.delete(0, "end")  # delete all the text in the entry
             GeneticAlgorithmFile.entry.insert(0, "")  # Insert blank for user input
             GeneticAlgorithmFile.entry.config(fg="black")
 
-    def on_focusout(self, event):
+    def on_focusout(self, event) -> None:
         """
-        referenced: https://stackoverflow.com/questions/30491721/how-to-insert-a-temporary-text-in-a-tkinter-entry-widget
+        referenced:https://stackoverflow.com/questions/30491721/how-to-insert-a-temporary-text-in-a-tkinter-entry-widget
         """
         if GeneticAlgorithmFile.entry.get() == "":
             GeneticAlgorithmFile.entry.insert(0, "Shape number you like the most...")
             GeneticAlgorithmFile.entry.config(fg="grey")
 
-    def error_window(self):
+    def error_window(self) -> None:
+        """
+        Generates error window for GUI
+        :return: None
+        """
         msg = tk.Toplevel()
         msg.title("WARNING")
         tk.Label(msg, text="Only input numbers between 1 and the total number of shapes").pack()
@@ -1009,6 +1369,12 @@ class GeneticAlgorithmFile(tk.Frame):
         msg.bind("<Return>", lambda destroy: msg.destroy())
 
     def point_manipulation(self, object: ndarray, manipulation) -> None:
+        """
+        Manipulates points within an object using passed function
+        :param object: object we are manipulating
+        :param manipulation: the function that will manipulate the object
+        :return: None
+        """
         index = np.random.randint(len(object["vectors"]))
         point = object["vectors"][index][random.randint(0, 2)]
         compare = deepcopy(point)
@@ -1018,14 +1384,24 @@ class GeneticAlgorithmFile(tk.Frame):
                 if list(object["vectors"][i][j]) == list(compare):
                     object["vectors"][i][j] = new_point
 
-    def multiply_points(self, point) -> None:
-        if random.randint(0, 1) == 0:
+    def multiply_points(self, point) -> ndarray:
+        """
+        Mutation - performs multiplication on a specific point, essentially scaling the values
+        :param point:
+        :return:
+        """
+        if random.randint(0, 2) == 0:
             point *= random.uniform(0.1, 2)
         else:
             point *= random.uniform(-2, -0.1)
         return point
 
     def add_points(self, point: ndarray) -> ndarray:
+        """
+        Mutation - Take a given point and increase each value within the point by half of the largest value
+        :param point: an ndarry of shape (3,) to edit
+        :return: the updated point
+        """
         largest: int = max(np.max(point[0]), np.max(point[1]), np.max(point[2]))
         point[0] += int(random.uniform(np.negative(largest / 2), largest / 2))
         point[1] += int(random.uniform(np.negative(largest / 2), largest / 2))
@@ -1033,6 +1409,11 @@ class GeneticAlgorithmFile(tk.Frame):
         return point
 
     def midpoint(self, coords: ndarray) -> ndarray:
+        """
+        Calauclates the midpoints of each edge of a triangle
+        :param coords: the triangle
+        :return: ndarray of coordinates representing the midpoints
+        """
         final_list: List[List[float]] = []
         for i in range(coords.shape[0]):
             if i + 1 == coords.shape[0]:
@@ -1054,7 +1435,7 @@ class GeneticAlgorithmFile(tk.Frame):
         """
         midpoints: ndarray = self.midpoint(to_break)
         # increase the size of the DATA object by 3 for the new sides we are adding
-        new_data = np.zeros(parent.shape[0] + 3, dtype=stl.mesh.Mesh.dtype)
+        new_data = np.zeros(parent.shape[0] + 3, dtype=mesh.Mesh.dtype)
         for v in range(len(parent["vectors"])):
             new_data["vectors"][v] = deepcopy(parent["vectors"][v])
         new_data["vectors"][index] = np.array((midpoints[0], midpoints[1], midpoints[2]))

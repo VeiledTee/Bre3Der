@@ -20,8 +20,8 @@ matplotlib.use("TkAgg")
 # Editable params
 T_RATE: float = 1
 CSV_FILE: str = "phylogenetic.csv"
-T_DELETE: int = 1  # chance a triangle gets deleted each genration
-P_DELETE: int = 1  # chance all ctriangles connected to a point gets deleted each genration
+T_DELETE: int = 0.5  # chance a triangle gets deleted each genration
+P_DELETE: int = 0.25  # chance all triangles connected to a point gets deleted each genration
 
 # DO NOT EDIT PLZ
 POP_SIZE: int = 10
@@ -111,7 +111,7 @@ def get_user() -> None:
     :return: None
     """
     global CURRENT_USER
-    CURRENT_USER = input("Input your Username: ")
+    CURRENT_USER = input("Input your Username: ").lower()
 
 
 def initialize_scratch():
@@ -318,8 +318,8 @@ class GeneticAlgorithmScratch(tk.Frame):
         self.plot_start()
         self.input_value = 1
         self.new_pop: List[ndarray] = self._pop
-        tk.Button(self, text="    Save    ", command=self.save_and_exit_button).pack(side=tk.BOTTOM)
-        tk.Button(self, text="   Evolve   ", command=self.plot_next_button).pack(side=tk.BOTTOM)
+        tk.Button(self, text="    Save    ", font="Calibri 18", command=self.save_and_exit_button).pack(side=tk.BOTTOM)
+        tk.Button(self, text="   Evolve   ", font="Calibri 18", command=self.plot_next_button).pack(side=tk.BOTTOM)
         master.bind("<Return>", self.plot_next_key)
         master.bind("<Escape>", self.save_and_exit_key)
         GeneticAlgorithmScratch.entry.bind("<FocusIn>", self.on_entry_click)
@@ -424,7 +424,7 @@ class GeneticAlgorithmScratch(tk.Frame):
         """
         self.get_entry()
         my_mesh: mesh.Mesh = mesh.Mesh(to_save.copy())
-        my_mesh.save(f"{save_file}.stl", mode=stl.Mode.BINARY)
+        my_mesh.save(f"{save_file}", mode=stl.Mode.BINARY)
 
     def save_and_exit_button(self) -> None:
         """
@@ -530,10 +530,10 @@ class GeneticAlgorithmScratch(tk.Frame):
                     to_break=self.new_pop[i]["vectors"][t], index=t, parent=self.new_pop[i]
                 )  # make more triangles
             # Are we deleting a triangle?
-            if np.random.uniform(0, 1) < T_DELETE:
+            if np.random.uniform(0, 1) < T_DELETE and len(self.new_pop[i]['vectors']) > 20:
                 self.new_pop[i] = self.delete_triangle(self.new_pop[i])
             # Are we deleting all triangles connected to a point?
-            if np.random.uniform(0, 1) < P_DELETE:
+            if np.random.uniform(0, 1) < P_DELETE and len(self.new_pop[i]['vectors']) > 20:
                 self.new_pop[i] = self.delete_point(self.new_pop[i])
             if np.random.randint(0, 2) % 2 == 0:
                 self.point_manipulation(self.new_pop[i], self.multiply_points)  # multiply a point by random value
@@ -561,8 +561,6 @@ class GeneticAlgorithmScratch(tk.Frame):
         :param obj: Shape to delete triangles from
         :return: Altered shape
         """
-        if len(obj) < 10:
-            return obj
         point = obj['vectors'][np.random.randint(0, len(obj['vectors']))][np.random.randint(0, 3)]
         mask = []
         for v in obj['vectors']:
@@ -571,7 +569,7 @@ class GeneticAlgorithmScratch(tk.Frame):
             else:
                 mask.append(True)
         mask_sum = np.sum(mask)
-        print(f"num true: {mask_sum}")
+        # print(f"num true: {mask_sum}")
         cur = np.zeros(mask_sum, dtype=stl.mesh.Mesh.dtype)
         a = []
         for i, boolean in enumerate(mask):
@@ -706,8 +704,8 @@ class GeneticAlgorithmFrom(tk.Frame):
         self.plot_start()
         self.input_value = 1
         self.new_pop = self._pop
-        tk.Button(self, text="    Save    ", command=self.save_and_exit_button).pack(side=tk.BOTTOM)
-        tk.Button(self, text="   Evolve   ", command=self.plot_next_button).pack(side=tk.BOTTOM)
+        tk.Button(self, text="    Save    ", font="Calibri 18", command=self.save_and_exit_button).pack(side=tk.BOTTOM)
+        tk.Button(self, text="   Evolve   ", font="Calibri 18", command=self.plot_next_button).pack(side=tk.BOTTOM)
         master.bind("<Return>", self.plot_next_key)
         master.bind("<Escape>", self.save_and_exit_key)
         GeneticAlgorithmFrom.entry.bind("<FocusIn>", self.on_entry_click)
@@ -806,7 +804,7 @@ class GeneticAlgorithmFrom(tk.Frame):
         """
         self.get_entry()
         my_mesh: mesh.Mesh = mesh.Mesh(to_plot.copy())
-        my_mesh.save(f"{save_file}.stl", mode=stl.Mode.BINARY)
+        my_mesh.save(f"{save_file}", mode=stl.Mode.BINARY)
 
     def save_and_exit_button(self) -> None:
         """
@@ -865,7 +863,7 @@ class GeneticAlgorithmFrom(tk.Frame):
         Gets the user's current selection and updates the class' attribute
         :return: None
         """
-        self.input_value = GeneticAlgorithmScratch.entry.get()
+        self.input_value = GeneticAlgorithmFrom.entry.get()
         if self.input_value == "":
             self.input_value = 1
         else:
@@ -882,7 +880,7 @@ class GeneticAlgorithmFrom(tk.Frame):
         Gets the user's final selection and updates the class' attribute
         :return: None
         """
-        self.input_value = GeneticAlgorithmScratch.entry.get()
+        self.input_value = GeneticAlgorithmFrom.entry.get()
         if self.input_value == "":
             self.input_value = 1
         else:
@@ -911,9 +909,9 @@ class GeneticAlgorithmFrom(tk.Frame):
                 self.new_pop[i] = self.break_up_triangle(
                     to_break=self.new_pop[i]["vectors"][t], index=t, parent=self.new_pop[i]
                 )  # make more triangles
-            if np.random.uniform(0, 1) < T_DELETE:
+            if np.random.uniform(0, 1) < T_DELETE and len(self.new_pop[i]['vectors']) > 20:
                 self.new_pop[i] = self.delete_triangle(self.new_pop[i])
-            if np.random.uniform(0, 1) < P_DELETE:
+            if np.random.uniform(0, 1) < P_DELETE and len(self.new_pop[i]['vectors']) > 20:
                 self.new_pop[i] = self.delete_point(self.new_pop[i])
             if np.random.randint(0, 2) % 2 == 0:
                 self.point_manipulation(self.new_pop[i], self.multiply_points)  # multiply a point by random value
@@ -941,8 +939,6 @@ class GeneticAlgorithmFrom(tk.Frame):
         :param obj: Shape to delete triangles from
         :return: Altered shape
         """
-        if len(obj) < 10:
-            return obj
         point = obj['vectors'][np.random.randint(0, len(obj['vectors']))][np.random.randint(0, 3)]
         mask = []
         for v in obj['vectors']:
@@ -951,7 +947,7 @@ class GeneticAlgorithmFrom(tk.Frame):
             else:
                 mask.append(True)
         mask_sum = np.sum(mask)
-        print(f"num true: {mask_sum}")
+        # print(f"num true: {mask_sum}")
         cur = np.zeros(mask_sum, dtype=stl.mesh.Mesh.dtype)
         a = []
         for i, boolean in enumerate(mask):
@@ -1086,8 +1082,8 @@ class GeneticAlgorithmFile(tk.Frame):
         self.input_value = 1
         self.plot_start()
         self.new_pop = self._pop
-        tk.Button(self, text="    Save    ", command=self.save_and_exit_button).pack(side=tk.BOTTOM)
-        tk.Button(self, text="   Evolve   ", command=self.plot_next_button).pack(side=tk.BOTTOM)
+        tk.Button(self, text="    Save    ", font="Calibri 18", command=self.save_and_exit_button).pack(side=tk.BOTTOM)
+        tk.Button(self, text="   Evolve   ", font="Calibri 18", command=self.plot_next_button).pack(side=tk.BOTTOM)
         master.bind("<Return>", self.plot_next_key)
         master.bind("<Escape>", self.save_and_exit_key)
         GeneticAlgorithmFile.entry.bind("<FocusIn>", self.on_entry_click)
@@ -1244,7 +1240,7 @@ class GeneticAlgorithmFile(tk.Frame):
         Gets the user's current selection and updates the class' attribute
         :return: None
         """
-        self.input_value = GeneticAlgorithmScratch.entry.get()
+        self.input_value = GeneticAlgorithmFile.entry.get()
         if self.input_value == "":
             self.input_value = 1
         else:
@@ -1261,7 +1257,7 @@ class GeneticAlgorithmFile(tk.Frame):
         Gets the user's final selection and updates the class' attribute
         :return: None
         """
-        self.input_value = GeneticAlgorithmScratch.entry.get()
+        self.input_value = GeneticAlgorithmFile.entry.get()
         if self.input_value == "":
             self.input_value = 1
         else:
@@ -1290,9 +1286,9 @@ class GeneticAlgorithmFile(tk.Frame):
                 self.new_pop[i] = self.break_up_triangle(
                     to_break=self.new_pop[i]["vectors"][t], index=t, parent=self.new_pop[i]
                 )  # make more triangles
-            if np.random.uniform(0, 1) < T_DELETE:
+            if np.random.uniform(0, 1) < T_DELETE and len(self.new_pop[i]['vectors']) > 20:
                 self.new_pop[i] = self.delete_triangle(self.new_pop[i])
-            if np.random.uniform(0, 1) < P_DELETE:
+            if np.random.uniform(0, 1) < P_DELETE and len(self.new_pop[i]['vectors']) > 20:
                 self.new_pop[i] = self.delete_point(self.new_pop[i])
             if np.random.randint(0, 2) % 2 == 0:
                 self.point_manipulation(self.new_pop[i], self.multiply_points)  # multiply a point by random value
@@ -1320,8 +1316,6 @@ class GeneticAlgorithmFile(tk.Frame):
         :param obj: Shape to delete triangles from
         :return: Altered shape
         """
-        if len(obj) < 10:
-            return obj
         point = obj['vectors'][np.random.randint(0, len(obj['vectors']))][np.random.randint(0, 3)]
         mask = []
         for v in obj['vectors']:
@@ -1330,7 +1324,7 @@ class GeneticAlgorithmFile(tk.Frame):
             else:
                 mask.append(True)
         mask_sum = np.sum(mask)
-        print(f"num true: {mask_sum}")
+        # print(f"num true: {mask_sum}")
         cur = np.zeros(mask_sum, dtype=stl.mesh.Mesh.dtype)
         a = []
         for i, boolean in enumerate(mask):

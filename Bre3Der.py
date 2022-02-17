@@ -247,7 +247,7 @@ def file_window():
 
 
 class StartPage(tk.Frame):
-    entry = tk.Entry(win4, width=35, bd=1)
+    entry = tk.Entry(win4, width=20, bd=1, font="Calibri 24")
     entry.insert(0, "File to load...")
     entry.config(fg="grey")
     entry.pack(side="left")
@@ -298,7 +298,7 @@ class StartPage(tk.Frame):
 
 
 class GeneticAlgorithmScratch(tk.Frame):
-    entry: tk.Entry = tk.Entry(win1, width=35, bd=1)
+    entry: tk.Entry = tk.Entry(win1, width=35, bd=1, font="Calibri 24")
     entry.insert(0, "Shape number you like the most...")
     entry.config(fg="grey")
     entry.pack(side="left")
@@ -687,7 +687,7 @@ class GeneticAlgorithmScratch(tk.Frame):
 
 
 class GeneticAlgorithmFrom(tk.Frame):
-    entry = tk.Entry(win2, width=35, bd=1)
+    entry = tk.Entry(win2, width=35, bd=1,font="Calibri 24")
     entry.insert(0, "Shape number you like the most...")
     entry.config(fg="grey")
     entry.pack(side="left")
@@ -1067,7 +1067,7 @@ class GeneticAlgorithmFrom(tk.Frame):
 
 
 class GeneticAlgorithmFile(tk.Frame):
-    entry = tk.Entry(win3, width=35, bd=1)
+    entry = tk.Entry(win3, width=35, bd=1, font="Calibri 24")
     entry.insert(0, "Shape number you like the most...")
     entry.config(fg="grey")
     entry.pack(side="left")

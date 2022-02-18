@@ -126,7 +126,7 @@ def initialize_scratch():
     files = glob.glob("*.csv")
     if not files:
         csv = open(os.path.join(os.getcwd(), CSV_FILE), "w")
-        csv.write("Parent,Child")
+        csv.write("Parent,Child,Generations")
         csv.close()
     cube = make_cube()
     pyramid = make_pyramid()
@@ -147,7 +147,7 @@ def initialize_from():
     files = glob.glob("*.csv")
     if not files:
         csv = open(os.path.join(os.getcwd(), CSV_FILE), "w")
-        csv.write("Parent,Child")
+        csv.write("Parent,Child,Generations")
         csv.close()
     CURRENT_DIRECTORY = path_setup()
     pop_files = glob.glob(f"{CURRENT_DIRECTORY}/*.stl")
@@ -178,7 +178,7 @@ def initialize_file():
     files = glob.glob("*.csv")
     if not files:
         csv = open(os.path.join(os.getcwd(), CSV_FILE), "w")
-        csv.write("Parent,Child")
+        csv.write("Parent,Child,Generations")
         csv.close()
     CURRENT_DIRECTORY = path_setup()
     new_pop = [mesh.Mesh.from_file(CURRENT_DIRECTORY + "/" + TO_LOAD).data for _ in range(POP_SIZE)]
@@ -440,6 +440,7 @@ class GeneticAlgorithmScratch(tk.Frame):
         diction = {
             df.columns[0]: GeneticAlgorithmScratch.parent,
             df.columns[1]: f"{CURRENT_USER}_{str(CURRENT_SHAPE).zfill(4)}",
+            df.columns[2]: GeneticAlgorithmScratch.counter,
         }
         df.loc[index] = diction
         df.to_csv(CSV_FILE, index=False)
@@ -466,6 +467,7 @@ class GeneticAlgorithmScratch(tk.Frame):
         diction = {
             df.columns[0]: GeneticAlgorithmScratch.parent,
             df.columns[1]: f"{CURRENT_USER}_{str(CURRENT_SHAPE).zfill(4)}",
+            df.columns[2]: GeneticAlgorithmScratch.counter,
         }
         df.loc[index] = diction
         df.to_csv(CSV_FILE, index=False)
@@ -820,6 +822,7 @@ class GeneticAlgorithmFrom(tk.Frame):
         diction = {
             df.columns[0]: GeneticAlgorithmFrom.parent,
             df.columns[1]: f"{CURRENT_USER}_{str(CURRENT_SHAPE).zfill(4)}",
+            df.columns[2]: GeneticAlgorithmScratch.counter,
         }
         df.loc[index] = diction
         df.to_csv(CSV_FILE, index=False)
@@ -846,6 +849,7 @@ class GeneticAlgorithmFrom(tk.Frame):
         diction = {
             df.columns[0]: GeneticAlgorithmFrom.parent,
             df.columns[1]: f"{CURRENT_USER}_{str(CURRENT_SHAPE).zfill(4)}",
+            df.columns[2]: GeneticAlgorithmScratch.counter,
         }
         df.loc[index] = diction
         df.to_csv(CSV_FILE, index=False)
@@ -1197,6 +1201,7 @@ class GeneticAlgorithmFile(tk.Frame):
         diction = {
             df.columns[0]: GeneticAlgorithmFile.parent,
             df.columns[1]: f"{CURRENT_USER}_{str(CURRENT_SHAPE).zfill(4)}",
+            df.columns[2]: GeneticAlgorithmScratch.counter,
         }
         df.loc[index] = diction
         df.to_csv(CSV_FILE, index=False)
@@ -1223,6 +1228,7 @@ class GeneticAlgorithmFile(tk.Frame):
         diction = {
             df.columns[0]: GeneticAlgorithmFile.parent,
             df.columns[1]: f"{CURRENT_USER}_{str(CURRENT_SHAPE).zfill(4)}",
+            df.columns[2]: GeneticAlgorithmScratch.counter,
         }
         df.loc[index] = diction
         df.to_csv(CSV_FILE, index=False)

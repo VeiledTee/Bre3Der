@@ -47,7 +47,7 @@ same as the other two methods so I won't rehash it here.
 By opening the ``.csv`` file that appears in the same directory as you ``.py`` files, you can see the parents of all the shapes
 previously created. The purpose of this is to generate a phylogenetic tree showing all the different shapes that can be derrived 
 from one parent. If you'd like to explore how many different shapes came from the ``cube`` shape, simply have a look for all 
-instances of ``cube`` in the ``Parents`` column and open up the respective file in the ``Child`` column! 
+instances of ``cube`` in the ``Parents`` column and open up the respective file in the ``Child`` column! The number of generations it took for each shape to be created will appear in the thrid column: ``Generations``
 
 You are also able to generate phylogenetic trees using the ``tree_generation.py`` file! Simply execute the script with the ``.csv`` file in the same directory the ``cube.txt`` and ``pyramid.txt`` files will be generated. 
 

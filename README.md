@@ -49,7 +49,7 @@ previously created. The purpose of this is to generate a phylogenetic tree showi
 from one parent. If you'd like to explore how many different shapes came from the ``cube`` shape, simply have a look for all 
 instances of ``cube`` in the ``Parents`` column and open up the respective file in the ``Child`` column! 
 
-You are also able to generate phylogenetic trees using the ``trees.py`` file! Simply execute the script with the ``.csv`` file in the same directory the ``cube.txt`` and ``pyramid.txt`` files will be generated. 
+You are also able to generate phylogenetic trees using the ``tree_generation.py`` file! Simply execute the script with the ``.csv`` file in the same directory the ``cube.txt`` and ``pyramid.txt`` files will be generated. 
 
 ### Send your shapes!
 If you would like your shapes to be uploaded to this repo so others can evolve them please email "bre3Der@gmail.com" with a 
